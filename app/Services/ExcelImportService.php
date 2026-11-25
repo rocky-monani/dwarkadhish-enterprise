@@ -573,7 +573,7 @@ class ExcelImportService
     }
 
     /**
-     * Parses Excel dates safely to Y-m-d
+     * Parses Excel dates safely to Y-m-d (prioritizes dd/mm/yyyy and ISO yyyy-mm-dd)
      */
     protected function parseExcelDate($val): ?string
     {
@@ -592,15 +592,35 @@ class ExcelImportService
         }
 
         $str = trim((string) $val);
+
+        // 1. ISO format: YYYY-MM-DD or YYYY/MM/DD
+        if (preg_match('/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/', $str, $m)) {
+            $y = (int) $m[1];
+            $mo = (int) $m[2];
+            $d = (int) $m[3];
+            return checkdate($mo, $d, $y) ? sprintf('%04d-%02d-%02d', $y, $mo, $d) : null;
+        }
+
+        // 2. Indian format: DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY (with US MM/DD fallback)
+        if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/', $str, $m)) {
+            $d = (int) $m[1];
+            $mo = (int) $m[2];
+            $y = (int) (strlen($m[3]) === 2 ? '20' . $m[3] : $m[3]);
+
+            if (checkdate($mo, $d, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+            }
+            if (checkdate($d, $mo, $y)) {
+                return sprintf('%04d-%02d-%02d', $y, $d, $mo);
+            }
+
+            return null;
+        }
+
+        // 3. Text dates like "14-Aug-2026"
         $time = strtotime($str);
         if ($time) {
             return date('Y-m-d', $time);
-        }
-
-        if (preg_match('/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/', $str, $m)) {
-            $year = strlen($m[3]) === 2 ? '20'.$m[3] : $m[3];
-
-            return sprintf('%04d-%02d-%02d', $year, $m[1], $m[2]);
         }
 
         return null;
