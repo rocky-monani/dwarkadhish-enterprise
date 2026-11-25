@@ -43,17 +43,18 @@ class ExcelImportService
         ];
 
         $seenIdentifiers = [];
+        $lookupIndex = $this->loadExistingLookupIndex();
 
         // 1. Process 2W Sheet
         $twSheet = $spreadsheet->getSheetByName('2W') ?? $spreadsheet->getSheet(0);
         if ($twSheet) {
-            $this->analyzeSheet($twSheet, '2W', 8, $preview, $seenIdentifiers);
+            $this->analyzeSheet($twSheet, '2W', 8, $preview, $seenIdentifiers, $lookupIndex);
         }
 
         // 2. Process 4W Sheet
         $fwSheet = $spreadsheet->getSheetByName('4W') ?? ($spreadsheet->getSheetCount() > 1 ? $spreadsheet->getSheet(1) : null);
         if ($fwSheet && $fwSheet->getTitle() !== ($twSheet ? $twSheet->getTitle() : '')) {
-            $this->analyzeSheet($fwSheet, '4W', 8, $preview, $seenIdentifiers);
+            $this->analyzeSheet($fwSheet, '4W', 8, $preview, $seenIdentifiers, $lookupIndex);
         }
 
         $preview['total_rows'] = $preview['sheets']['2W']['total'] + $preview['sheets']['4W']['total'];
@@ -99,19 +100,23 @@ class ExcelImportService
 
         DB::transaction(function () use ($spreadsheet, $userId, &$summary) {
             $seenIdentifiers = [];
+            $lookupIndex = $this->loadExistingLookupIndex();
 
             // Import 2W Sheet
             $twSheet = $spreadsheet->getSheetByName('2W') ?? $spreadsheet->getSheet(0);
             if ($twSheet) {
-                $this->importSheetRecords($twSheet, '2W', 8, $userId, $seenIdentifiers, $summary);
+                $this->importSheetRecords($twSheet, '2W', 8, $userId, $seenIdentifiers, $summary, $lookupIndex);
             }
 
             // Import 4W Sheet
             $fwSheet = $spreadsheet->getSheetByName('4W') ?? ($spreadsheet->getSheetCount() > 1 ? $spreadsheet->getSheet(1) : null);
             if ($fwSheet && $fwSheet->getTitle() !== ($twSheet ? $twSheet->getTitle() : '')) {
-                $this->importSheetRecords($fwSheet, '4W', 8, $userId, $seenIdentifiers, $summary);
+                $this->importSheetRecords($fwSheet, '4W', 8, $userId, $seenIdentifiers, $summary, $lookupIndex);
             }
         });
+
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
 
         $summary['total_processed'] = $summary['inserted'] + $summary['updated'] + $summary['unchanged'];
 
@@ -121,9 +126,46 @@ class ExcelImportService
     }
 
     /**
+     * Preload existing active records into O(1) lookup maps in a single query.
+     */
+    protected function loadExistingLookupIndex(): array
+    {
+        $rows = BatteryComplaint::active()
+            ->toBase()
+            ->select([
+                'id', 'battery_type', 'complaint_number', 'complaint_date', 'case_number',
+                'purchase_date', 'product_model', 'battery_serial_number', 'vehicle_number',
+                'vehicle_name', 'final_decision', 'customer_mobile', 'customer_name',
+                'location', 'closing_date', 'new_battery_number', 'return_date', 'delivery_mode',
+            ])
+            ->get();
+
+        $byComplaint = [];
+        $bySerialDate = [];
+
+        foreach ($rows as $row) {
+            $type = strtoupper($row->battery_type ?? 'TW') === 'TW' ? 'TW' : 'FW';
+            if (! empty($row->complaint_number)) {
+                $cKey = $type . '|' . trim((string) $row->complaint_number);
+                $byComplaint[$cKey] = $row;
+            }
+            if (! empty($row->battery_serial_number) && ! empty($row->complaint_date)) {
+                $dStr = substr((string) $row->complaint_date, 0, 10);
+                $sKey = $type . '|' . trim((string) $row->battery_serial_number) . '|' . $dStr;
+                $bySerialDate[$sKey] = $row;
+            }
+        }
+
+        return [
+            'byComplaint' => $byComplaint,
+            'bySerialDate' => $bySerialDate,
+        ];
+    }
+
+    /**
      * Analyze sheet rows for preview
      */
-    protected function analyzeSheet(Worksheet $worksheet, string $category, int $startRow, array &$preview, array &$seenIdentifiers): void
+    protected function analyzeSheet(Worksheet $worksheet, string $category, int $startRow, array &$preview, array &$seenIdentifiers, array $lookupIndex = []): void
     {
         $highestRow = $worksheet->getHighestRow();
         $highestColumn = $worksheet->getHighestColumn();
@@ -132,8 +174,11 @@ class ExcelImportService
             return;
         }
 
-        for ($r = $startRow; $r <= $highestRow; $r++) {
-            $rowCells = $worksheet->rangeToArray("A{$r}:{$highestColumn}{$r}")[0];
+        // Read entire sheet range in one call instead of per-row rangeToArray
+        $allRows = $worksheet->rangeToArray("A{$startRow}:{$highestColumn}{$highestRow}", null, true, false, false);
+
+        foreach ($allRows as $offset => $rowCells) {
+            $r = $startRow + $offset;
             $nonEmpty = array_filter($rowCells, fn ($val) => $val !== null && trim((string) $val) !== '');
 
             if (empty($nonEmpty)) {
@@ -144,14 +189,12 @@ class ExcelImportService
             $complaintNo = $rowData['complaint_number'];
             $serialNo = $rowData['battery_serial_number'];
 
-            // Require Battery Serial Number to be entered in Excel to import row
             if (empty($serialNo)) {
                 continue;
             }
 
             $preview['sheets'][$category]['total']++;
 
-            // Duplicate in Excel File check - mark as existing/update so Excel row overwrites details
             $dedupKey = $complaintNo ? "C:{$complaintNo}_T:{$category}" : "S:{$serialNo}_D:{$rowData['complaint_date']}_T:{$category}";
             if (isset($seenIdentifiers[$dedupKey])) {
                 $preview['sheets'][$category]['existing']++;
@@ -159,8 +202,7 @@ class ExcelImportService
             }
             $seenIdentifiers[$dedupKey] = $r;
 
-            // Check against existing Database record
-            $existing = $this->findExistingRecord($complaintNo, $serialNo, $rowData['complaint_date'], $category);
+            $existing = $this->findExistingRecord($complaintNo, $serialNo, $rowData['complaint_date'], $category, $lookupIndex);
 
             if (! $existing) {
                 $preview['sheets'][$category]['new']++;
@@ -175,9 +217,9 @@ class ExcelImportService
     }
 
     /**
-     * Import records from sheet into database (Overwrites all details from Excel for duplicates)
+     * Import records from sheet into database (Batch inserts + O(1) lookup)
      */
-    protected function importSheetRecords(Worksheet $worksheet, string $category, int $startRow, ?int $userId, array &$seenIdentifiers, array &$summary): void
+    protected function importSheetRecords(Worksheet $worksheet, string $category, int $startRow, ?int $userId, array &$seenIdentifiers, array &$summary, array &$lookupIndex = []): void
     {
         $highestRow = $worksheet->getHighestRow();
         $highestColumn = $worksheet->getHighestColumn();
@@ -186,8 +228,13 @@ class ExcelImportService
             return;
         }
 
-        for ($r = $startRow; $r <= $highestRow; $r++) {
-            $rowCells = $worksheet->rangeToArray("A{$r}:{$highestColumn}{$r}")[0];
+        $allRows = $worksheet->rangeToArray("A{$startRow}:{$highestColumn}{$highestRow}", null, true, false, false);
+        $now = now()->toDateTimeString();
+        $toInsert = [];
+        $pendingInsertKeys = []; // dedupKey => index in $toInsert
+
+        foreach ($allRows as $offset => $rowCells) {
+            $r = $startRow + $offset;
             $nonEmpty = array_filter($rowCells, fn ($val) => $val !== null && trim((string) $val) !== '');
 
             if (empty($nonEmpty)) {
@@ -198,7 +245,6 @@ class ExcelImportService
             $complaintNo = $rowData['complaint_number'];
             $serialNo = $rowData['battery_serial_number'];
 
-            // Skip row if Battery Serial Number is missing in Excel
             if (empty($serialNo)) {
                 $summary['sheets'][$category]['skipped']++;
                 $summary['skipped']++;
@@ -206,39 +252,73 @@ class ExcelImportService
             }
 
             $dedupKey = $complaintNo ? "C:{$complaintNo}_T:{$category}" : "S:{$serialNo}_D:{$rowData['complaint_date']}_T:{$category}";
-            $existing = $this->findExistingRecord($complaintNo, $serialNo, $rowData['complaint_date'], $category);
+            $existing = $this->findExistingRecord($complaintNo, $serialNo, $rowData['complaint_date'], $category, $lookupIndex);
 
             $payload = array_merge($rowData, [
                 'battery_type' => $category === '2W' ? 'TW' : 'FW',
                 'excel_sheet' => $category,
                 'excel_row_number' => $r,
                 'complaint_status' => (! empty($rowData['closing_date']) || ! empty($rowData['final_decision'])) ? 'Closed' : 'Open',
+                'updated_at' => $now,
             ]);
 
             if (! $existing && ! isset($seenIdentifiers[$dedupKey])) {
                 $payload['created_by'] = $userId;
-                $created = BatteryComplaint::create($payload);
-                $seenIdentifiers[$dedupKey] = $created;
+                $payload['created_at'] = $now;
+                $idx = count($toInsert);
+                $toInsert[] = $payload;
+                $pendingInsertKeys[$dedupKey] = $idx;
+                $seenIdentifiers[$dedupKey] = true;
                 $summary['sheets'][$category]['inserted']++;
                 $summary['inserted']++;
             } else {
-                // Duplicate found (in DB or earlier in Excel): OVERWRITE ALL DETAILS FROM EXCEL
-                $targetRecord = $existing ?: ($seenIdentifiers[$dedupKey] ?? null);
-                if ($targetRecord instanceof BatteryComplaint) {
-                    $targetRecord->update($payload);
-                    $summary['sheets'][$category]['updated']++;
-                    $summary['updated']++;
+                if (isset($pendingInsertKeys[$dedupKey])) {
+                    // Duplicate within same Excel batch: overwrite buffered insert row
+                    $idx = $pendingInsertKeys[$dedupKey];
+                    $payload['created_by'] = $toInsert[$idx]['created_by'];
+                    $payload['created_at'] = $toInsert[$idx]['created_at'];
+                    $toInsert[$idx] = $payload;
+                } elseif ($existing && isset($existing->id)) {
+                    if (! $this->isRecordIdentical($existing, $rowData)) {
+                        DB::table('battery_complaints')->where('id', $existing->id)->update($payload);
+                    }
                 }
+                $summary['sheets'][$category]['updated']++;
+                $summary['updated']++;
+            }
+        }
+
+        if (! empty($toInsert)) {
+            foreach (array_chunk($toInsert, 500) as $chunk) {
+                DB::table('battery_complaints')->insert($chunk);
             }
         }
     }
 
     /**
-     * Find existing database record using primary and fallback identifiers per category
+     * Find existing database record using preloaded O(1) lookup maps
      */
-    protected function findExistingRecord(?string $complaintNo, ?string $serialNo, ?string $complaintDate, string $category = '2W'): ?BatteryComplaint
+    protected function findExistingRecord(?string $complaintNo, ?string $serialNo, ?string $complaintDate, string $category = '2W', array $lookupIndex = []): ?object
     {
         $type = $category === '2W' ? 'TW' : 'FW';
+
+        if (! empty($lookupIndex)) {
+            if (! empty($complaintNo)) {
+                $cKey = $type . '|' . trim($complaintNo);
+                if (isset($lookupIndex['byComplaint'][$cKey])) {
+                    return $lookupIndex['byComplaint'][$cKey];
+                }
+            }
+
+            if (! empty($serialNo) && ! empty($complaintDate)) {
+                $sKey = $type . '|' . trim($serialNo) . '|' . substr($complaintDate, 0, 10);
+                if (isset($lookupIndex['bySerialDate'][$sKey])) {
+                    return $lookupIndex['bySerialDate'][$sKey];
+                }
+            }
+
+            return null;
+        }
 
         if (! empty($complaintNo)) {
             $rec = BatteryComplaint::where('complaint_number', trim($complaintNo))
@@ -262,7 +342,7 @@ class ExcelImportService
     /**
      * Check if database record is identical to incoming row payload
      */
-    protected function isRecordIdentical(BatteryComplaint $record, array $payload): bool
+    protected function isRecordIdentical(object $record, array $payload): bool
     {
         $keys = [
             'complaint_number', 'complaint_date', 'case_number', 'purchase_date',
@@ -270,13 +350,16 @@ class ExcelImportService
             'final_decision', 'customer_mobile', 'customer_name', 'location',
             'closing_date', 'new_battery_number', 'return_date', 'delivery_mode',
         ];
+        $dateKeys = ['complaint_date', 'purchase_date', 'closing_date', 'return_date'];
 
         foreach ($keys as $key) {
-            $dbVal = $record->{$key};
+            $dbVal = $record->{$key} ?? null;
             $payVal = $payload[$key] ?? null;
 
             if ($dbVal instanceof Carbon) {
                 $dbVal = $dbVal->format('Y-m-d');
+            } elseif ($dbVal !== null && in_array($key, $dateKeys, true)) {
+                $dbVal = substr((string) $dbVal, 0, 10);
             }
 
             if (trim((string) $dbVal) !== trim((string) $payVal)) {
