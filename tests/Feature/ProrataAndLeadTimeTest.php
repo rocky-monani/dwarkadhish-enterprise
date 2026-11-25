@@ -59,8 +59,8 @@ class ProrataAndLeadTimeTest extends TestCase
         $response = $this->actingAs($user)->get('/complaints/pending-cases');
 
         $response->assertStatus(200);
-        $response->assertSee('LEAD TIME 1 > 90 DAYS', false);
-        $response->assertSee('DO NOT ENTER CASE', false);
+        $response->assertSee('Lead time &gt; 90d', false);
+        $response->assertSee('do not enter', false);
     }
 
     public function test_lead_time_1_calculates_from_primary_billing_to_sale_date(): void

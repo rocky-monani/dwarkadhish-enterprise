@@ -1,61 +1,50 @@
 @extends('layouts.app')
 
-@section('title', '🛵 TW (Two-Wheeler) Battery Complaint Entry')
+@section('title', 'New Inward Complaint')
 
 @section('content')
-<div style="max-width: 1050px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+<div style="max-width: 1050px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px;">
 
     <!-- Open Complaint Duplicate Alert Banner -->
-    <div id="duplicate_alert" class="card" style="display: none; border-left: 5px solid var(--accent-red); background-color: #fef2f2; margin-bottom: 0;">
-        <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
-            <div style="font-size: 1.5rem; line-height: 1;">⚠️</div>
-            <div style="flex-grow: 1;">
-                <div style="font-weight: 800; color: #991b1b; font-size: 1rem;">OPEN COMPLAINT EXISTS FOR THIS BATTERY</div>
-                <div id="duplicate_msg" style="color: #7f1d1d; font-size: 0.9rem; margin-top: 0.25rem; font-weight: 600;"></div>
-                <div style="color: #991b1b; font-size: 0.8rem; margin-top: 0.35rem;">Please close the previous open case of this battery first before creating a new inward entry.</div>
-            </div>
+    <div id="duplicate_alert" class="card" style="display: none; border-left: 3px solid var(--accent-red); background-color: #fef2f2; margin-bottom: 0;">
+        <div style="flex-grow: 1;">
+            <div style="font-weight: 600; color: #991b1b; font-size: 14px;">Open complaint exists for this battery</div>
+            <div id="duplicate_msg" style="color: #7f1d1d; font-size: 13px; margin-top: 4px;"></div>
+            <div style="color: #991b1b; font-size: 12px; margin-top: 4px;">Close the previous open case before creating a new inward entry.</div>
         </div>
     </div>
 
-    <!-- STEP 1: BATTERY IDENTIFICATION & SEARCH -->
-    <div class="card" style="margin-bottom: 0; border-top: 4px solid var(--amaron-green);">
+    <!-- Step 1: Battery Identification & Search -->
+    <div class="card" style="margin-bottom: 0;">
         <div class="card-header">
-            <h3 class="card-title">
-                <span style="background-color: var(--amaron-green); color: #ffffff; width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 800;">🛵</span>
-                Two-Wheeler (TW) Battery Identification & Warranty Lookup
-            </h3>
-            <span style="font-size: 0.78rem; font-weight: 700; color: var(--amaron-green-dark); background-color: #d1fae5; padding: 0.25rem 0.65rem; border-radius: 4px;">Two Wheeler Entry</span>
+            <h3 class="card-title">Battery identification &amp; warranty lookup</h3>
+            <span class="badge badge-open">Inward entry</span>
         </div>
 
-        <div style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
+        <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
             <div class="form-group" style="flex-grow: 1; min-width: 250px; margin-bottom: 0;">
-                <label for="lookup_serial" class="form-label" style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">
-                    BATTERY SERIAL NUMBER (Scan Barcode or Type)
-                </label>
-                <input type="text" id="lookup_serial" class="form-control" style="font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.75rem 1rem;" placeholder="e.g. EJE0231A644397" autofocus autocomplete="off">
+                <label for="lookup_serial" class="form-label">Battery serial number (scan barcode or type)</label>
+                <input type="text" id="lookup_serial" class="form-control" style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500; text-transform: uppercase; height: 42px;" placeholder="e.g. EJE0231A644397" autofocus autocomplete="off">
             </div>
 
-            <button type="button" id="btn_fetch" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-size: 0.95rem; font-weight: 700;">
-                <span id="fetch_spinner" class="spinner" style="display: none; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; width: 18px; height: 18px; animation: spin 0.8s linear infinite;"></span>
-                <span id="fetch_text">CHECK BATTERY</span>
+            <button type="button" id="btn_fetch" class="btn btn-primary" style="height: 42px; padding: 0 20px;">
+                <span id="fetch_spinner" class="spinner" style="display: none; border: 2px solid #ffffff; border-top-color: transparent; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite;"></span>
+                <span id="fetch_text">Check battery</span>
             </button>
 
-            <button type="button" id="btn_manual_entry" class="btn btn-outline" style="padding: 0.75rem 1.25rem; font-size: 0.9rem; font-weight: 700; background-color: #ffffff; border-color: #cbd5e1; color: var(--text-main);" title="Enter battery manually if not registered in Battery Connect app">
-                📝 Manual / Offline Entry
+            <button type="button" id="btn_manual_entry" class="btn btn-outline" style="height: 42px;" title="Enter battery manually if not registered in Battery Connect app">
+                Manual / offline entry
             </button>
         </div>
 
         <!-- Offline / Manual Notice Banner -->
-        <div id="offline_notice_wrap" style="display: none; margin-top: 1rem; padding: 1rem 1.25rem; border-left: 5px solid #0284c7; background-color: #f0f9ff; border-radius: var(--radius-sm);">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="font-size: 1.4rem;">📝</div>
-                    <div>
-                        <div style="font-weight: 800; color: #0369a1; font-size: 0.95rem;">OFFLINE / MANUAL BATTERY ENTRY MODE</div>
-                        <div style="color: #075985; font-size: 0.85rem;">This battery is not registered in Battery Connect app. Fill available complaint details below.</div>
-                    </div>
+        <div id="offline_notice_wrap" style="display: none; margin-top: 16px; padding: 12px 16px; border-left: 3px solid var(--accent-blue); background-color: #f0f9ff; border-radius: 8px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                <div>
+                    <div style="font-weight: 600; color: #0369a1; font-size: 13px;">Offline / manual battery entry mode</div>
+                    <div style="color: #075985; font-size: 12px; margin-top: 2px;">Fill available complaint details below.</div>
                 </div>
-                <button type="button" class="btn btn-outline" style="padding: 0.25rem 0.65rem; font-size: 0.75rem;" onclick="document.getElementById('offline_notice_wrap').style.display='none';">Dismiss</button>
+                <button type="button" class="btn btn-outline" style="height: 28px; padding: 0 10px; font-size: 12px;" onclick="document.getElementById('offline_notice_wrap').style.display='none';">Dismiss</button>
             </div>
         </div>
 
@@ -286,8 +275,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const formImagePath = document.getElementById('form_image_path');
     const formConnectData = document.getElementById('form_battery_connect_data');
 
-    const isProrataCheck = document.getElementById('is_prorata');
-    const prorataWrap = document.getElementById('prorata_field_wrap');
+    const isProrataCheck = document.getElementById('is_prorata_check');
+    const isProrataHidden = document.getElementById('is_prorata');
+    const prorataWrap = document.getElementById('prorata_wrap');
 
     const isServiceCheck = document.getElementById('is_service_battery_given');
     const serviceWrap = document.getElementById('service_battery_wrap');
@@ -297,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const btnClear = document.getElementById('btn_clear');
 
     // Auto-focus lookup serial on load
-    lookupInput.focus();
+    if (lookupInput) lookupInput.focus();
 
     // Battery Type Change -> Auto Fetch Next Complaint Number for TW or FW
     const batteryTypeSelect = document.getElementById('battery_type');
@@ -313,17 +303,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await safeFetchJson("{{ route('complaints.next_number') }}?battery_type=" + selectedType);
                 if (data && data.next_complaint_number) {
                     document.getElementById('complaint_number').value = data.next_complaint_number;
-                    showToast('ℹ️ Complaint number updated to #' + data.next_complaint_number + ' for ' + selectedType + ' category.', 'info');
+                    showToast('Complaint number updated to #' + data.next_complaint_number + ' for ' + selectedType + '.', 'info');
                 }
             } catch (e) {}
         });
     }
 
     // Pro-Rata Toggle
-    isProrataCheck.addEventListener('change', function() {
-        prorataWrap.style.display = this.checked ? 'block' : 'none';
-        if (!this.checked) document.getElementById('prorata_percentage').value = '';
-    });
+    if (isProrataCheck && prorataWrap) {
+        isProrataCheck.addEventListener('change', function() {
+            if (isProrataHidden) isProrataHidden.value = this.checked ? '1' : '0';
+            prorataWrap.style.display = this.checked ? 'block' : 'none';
+            if (!this.checked) document.getElementById('prorata_percentage').value = '';
+        });
+    }
 
     // Service Battery Toggle
     if (isServiceCheck) {
@@ -437,23 +430,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (data.status === 'SUCCESS' || data.success) {
                 populateFetchedDetails(data);
-                showToast('✓ Battery details fetched & populated into form successfully!', 'success');
-                
+                showToast('Battery details fetched and populated.', 'success');
+
                 // Focus operator entry field: Customer Name
                 document.getElementById('customer_name').focus();
             } else if (data.status === 'AUTH_REQUIRED') {
-                showToast('🔒 Battery Connect session requires login/OTP verification.', 'warning');
+                showToast('Battery Connect session requires login / OTP verification.', 'warning');
                 openBatteryConnectLoginBrowser();
             } else {
-                showToast('⚠️ ' + (data.message || 'Battery lookup completed.'), 'warning');
+                showToast(data.message || 'Battery lookup completed.', 'warning');
             }
 
         } catch (err) {
-            showToast('✕ Lookup error: ' + err.message, 'error');
+            showToast('Lookup error: ' + err.message, 'error');
         } finally {
             fetchBtn.disabled = false;
             fetchSpinner.style.display = 'none';
-            fetchText.innerText = 'CHECK BATTERY';
+            fetchText.innerText = 'Check battery';
             setTimeout(() => { progressWrap.style.display = 'none'; }, 2000);
         }
     }
@@ -565,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const imgPath = data.image_path || data.screenshot_path;
         if (imgPath) {
             formImagePath.value = imgPath;
-            previewImg.src = "{{ asset('') }}" + imgPath;
+            previewImg.src = (imgPath.startsWith('http') || imgPath.startsWith('/')) ? imgPath : '/' + imgPath;
             if (imgWrap) imgWrap.style.display = 'flex';
         } else {
             if (imgWrap) imgWrap.style.display = 'none';

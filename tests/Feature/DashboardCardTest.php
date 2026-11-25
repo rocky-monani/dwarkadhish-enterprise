@@ -53,8 +53,8 @@ class DashboardCardTest extends TestCase
         $response->assertViewHas('twCount', 2);
         $response->assertViewHas('fwCount', 1);
 
-        $response->assertSee('Today TW (2W)');
-        $response->assertSee('Today 4W (4W)');
+        $response->assertSee('Today inward');
+        $response->assertSee('1 TW · 1 FW');
         $response->assertDontSee('Total TW (2W)');
         $response->assertDontSee('Total 4W / Commercial');
         $response->assertDontSee('Open Cases');

@@ -50,10 +50,10 @@ class OperatorWorkflowTest extends TestCase
 
         // 2. Operator 2 opens Pending Cases page
         $pendingResponse = $this->actingAs($user)->get('/complaints/pending-cases');
-        $pendingResponse->assertSee('PENDING CASES');
+        $pendingResponse->assertSee('Pending cases');
         $pendingResponse->assertSee('OPERATOR WORKFLOW CUSTOMER');
         $pendingResponse->assertSee('3999');
-        $pendingResponse->assertSee('PRINT ALL TODAY\'S ENTRY', false);
+        $pendingResponse->assertSee('Print 2W (1)', false);
 
         $complaint = BatteryComplaint::where('complaint_number', '3999')->first();
 

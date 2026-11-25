@@ -28,11 +28,11 @@ class ExcelImportExportTest extends TestCase
 
         $response = $this->actingAs($user)->get('/excel/import');
         $response->assertStatus(200);
-        $response->assertSee('Import Official Excel Workbook');
+        $response->assertSee('Import Excel workbook');
 
         $response = $this->actingAs($user)->get('/excel/export');
         $response->assertStatus(200);
-        $response->assertSee('EXPORT INWARD REGISTER');
+        $response->assertSee('Export inward register');
     }
 
     public function test_can_import_excel_workbook_sheet(): void
@@ -222,9 +222,9 @@ class ExcelImportExportTest extends TestCase
         ]);
 
         $response->assertStatus(200);
-        $response->assertSee('IMPORT PREVIEW');
-        $response->assertSee('2W Sheet Records');
-        $response->assertSee('4W Sheet Records');
+        $response->assertSee('Import preview');
+        $response->assertSee('2W sheet records');
+        $response->assertSee('4W sheet records');
 
         // Database should NOT be modified during preview
         $this->assertDatabaseMissing('battery_complaints', ['complaint_number' => '8888']);

@@ -147,8 +147,8 @@ class ComplaintTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('IMPORT EXCEL DATA');
-        $response->assertSee('EXPORT EXCEL SHEET');
+        $response->assertSee('Import Excel');
+        $response->assertSee('Export Excel');
     }
 
     public function test_operator_cannot_delete_complaint_and_admin_can(): void
@@ -182,13 +182,13 @@ class ComplaintTest extends TestCase
 
         $responseOp = $this->actingAs($operator)->get('/complaints');
         $responseOp->assertStatus(200);
-        $responseOp->assertDontSee('Customer Name');
-        $responseOp->assertDontSee('Delivery Mode');
+        $responseOp->assertDontSee('Customer &amp; city', false);
+        $responseOp->assertDontSee('Delivery mode');
 
         $responseAdmin = $this->actingAs($admin)->get('/complaints');
         $responseAdmin->assertStatus(200);
-        $responseAdmin->assertSee('Customer Name');
-        $responseAdmin->assertSee('Delivery Mode');
+        $responseAdmin->assertSee('Customer &amp; city', false);
+        $responseAdmin->assertSee('Delivery mode');
     }
 
     public function test_can_update_all_complaint_fields_in_edit_page(): void

@@ -3,132 +3,114 @@
 @section('title', 'Close Complaint Case')
 
 @section('content')
-<div style="display: flex; flex-direction: column; gap: 1.5rem;">
+<div style="display: flex; flex-direction: column; gap: 20px;">
 
-    <!-- TOP HEADER BAR -->
-    <div class="card" style="margin-bottom: 0; background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-top: 4px solid var(--accent-amber);">
-        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <!-- Header -->
+    <div class="card" style="margin-bottom: 0; padding: 20px 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
             <div>
-                <h2 style="font-size: 1.3rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.6rem;">
-                    <span>🔒 Close Complaint Case</span>
+                <h2 style="font-size: 18px; font-weight: 600; color: var(--text-main); margin: 0;">
+                    Close complaint case
                 </h2>
-                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    Type into any input field below to auto-find open complaints letter-by-letter. No submit button required.
+                <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+                    Type into any field below to filter open complaints automatically.
                 </p>
             </div>
-            <div>
-                <a href="{{ route('complaints.pending_cases') }}" class="btn btn-outline" style="font-weight: 700; font-size: 0.85rem;">
-                    📋 View Pending Cases List
-                </a>
-            </div>
+            <a href="{{ route('complaints.pending_cases') }}" class="btn btn-outline">
+                Pending cases
+            </a>
         </div>
     </div>
 
-    <!-- 4 SEPARATE LIVE SEARCH INPUT FIELDS CARD -->
-    <div class="card" style="margin-bottom: 0; padding: 1.25rem; border-top: 3px solid var(--primary);">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem;">
-                <span>⚡ LIVE LETTER-BY-LETTER AUTO-SEARCH</span>
+    <!-- 4 Live Search Inputs -->
+    <div class="card" style="margin-bottom: 0; padding: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                <span>Live search</span>
                 <span id="search_spinner" class="spinner" style="display: none; border: 2px solid var(--primary); border-top-color: transparent; border-radius: 50%; width: 14px; height: 14px; animation: spin 0.8s linear infinite;"></span>
             </div>
-            <button type="button" id="btn_clear_search" class="btn btn-outline" style="padding: 0.25rem 0.65rem; font-size: 0.78rem;">
-                🧹 Clear All Inputs
+            <button type="button" id="btn_clear_search" class="btn btn-outline" style="height: 28px; padding: 0 10px; font-size: 12px;">
+                Clear all
             </button>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem;">
-            <!-- Field 1: Complaint Number -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;">
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="complaint_number_search" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">
-                    1. COMPLAINT NUMBER
-                </label>
-                <input type="text" id="complaint_number_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace; font-weight: 800;" placeholder="e.g. 1001 or 3634" autocomplete="off" autofocus>
+                <label for="complaint_number_search" class="form-label">Complaint number</label>
+                <input type="text" id="complaint_number_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace;" placeholder="e.g. 1001" autocomplete="off" autofocus>
             </div>
 
-            <!-- Field 2: Customer Name -->
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="customer_name_search" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">
-                    2. CUSTOMER NAME
-                </label>
-                <input type="text" id="customer_name_search" class="form-control live-search-input" style="font-weight: 700;" placeholder="e.g. Momai Auto / Rajesh" autocomplete="off">
+                <label for="customer_name_search" class="form-label">Customer name</label>
+                <input type="text" id="customer_name_search" class="form-control live-search-input" placeholder="e.g. Rajesh" autocomplete="off">
             </div>
 
-            <!-- Field 3: Customer Mobile Number -->
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="customer_mobile_search" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">
-                    3. CUSTOMER MOBILE NO
-                </label>
-                <input type="text" id="customer_mobile_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace; font-weight: 700;" placeholder="e.g. 9876543210" autocomplete="off">
+                <label for="customer_mobile_search" class="form-label">Customer mobile</label>
+                <input type="text" id="customer_mobile_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace;" placeholder="e.g. 9876543210" autocomplete="off">
             </div>
 
-            <!-- Field 4: Battery Serial Number -->
             <div class="form-group" style="margin-bottom: 0;">
-                <label for="battery_serial_search" class="form-label" style="font-size: 0.8rem; font-weight: 700; color: var(--text-main);">
-                    4. BATTERY SERIAL NO
-                </label>
-                <input type="text" id="battery_serial_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace; font-weight: 800; text-transform: uppercase;" placeholder="e.g. EAB0206Z10..." autocomplete="off">
+                <label for="battery_serial_search" class="form-label">Battery serial</label>
+                <input type="text" id="battery_serial_search" class="form-control live-search-input" style="font-family: 'JetBrains Mono', monospace; text-transform: uppercase;" placeholder="e.g. EAB0206Z10..." autocomplete="off">
             </div>
         </div>
     </div>
 
-    <!-- LIVE MATCHING RESULTS TABLE CARD -->
+    <!-- Live Matching Results -->
     <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 0;">
-        <div style="padding: 0.85rem 1.25rem; background-color: #f8fafc; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
-            <div style="font-size: 0.85rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                <span>🟢 OPEN CASES RESULTS</span>
-                <span id="results_count_badge" class="badge" style="background-color: var(--primary-light); color: var(--primary); font-weight: 800; font-size: 0.78rem;">Loading...</span>
+        <div style="padding: 16px 20px; background-color: #ffffff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+            <div style="font-size: 14px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                <span>Open cases</span>
+                <span id="results_count_badge" class="badge badge-open tabular">Loading...</span>
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted);">
-                Click "Close This Case" to record final settlement & replacement serial.
+            <div style="font-size: 12px; color: var(--text-muted);">
+                Select Close case to record final settlement and replacement serial.
             </div>
         </div>
 
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-                <thead>
-                    <tr style="background-color: #f1f5f9; border-bottom: 2px solid var(--border-color); color: var(--text-secondary); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em;">
-                        <th style="padding: 0.75rem 1rem;">Complaint No</th>
-                        <th style="padding: 0.75rem 1rem;">Inward Date</th>
-                        <th style="padding: 0.75rem 1rem;">Category / Model</th>
-                        <th style="padding: 0.75rem 1rem;">Customer Name</th>
-                        <th style="padding: 0.75rem 1rem;">Mobile No</th>
-                        <th style="padding: 0.75rem 1rem;">Battery Serial</th>
-                        <th style="padding: 0.75rem 1rem;">CRM Case No</th>
-                        <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+        <table id="close_case_table">
+            <thead>
+                    <tr>
+                        <th>Complaint no</th>
+                        <th>Inward date</th>
+                        <th>Category / model</th>
+                        <th>Customer</th>
+                        <th>Mobile</th>
+                        <th>Battery serial</th>
+                        <th>CRM case</th>
+                        <th style="text-align: right;">Action</th>
                     </tr>
                 </thead>
-                <tbody id="live_results_body">
-                    <!-- Populated dynamically via JavaScript -->
-                </tbody>
-            </table>
-        </div>
+            <tbody id="live_results_body">
+            </tbody>
+        </table>
     </div>
 
 </div>
 
-<!-- SETTLEMENT / CLOSE CASE MODAL -->
+<!-- Settlement Modal -->
 <div id="close_case_modal_overlay" class="modal-overlay">
     <div class="modal-card" style="max-width: 540px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1rem;">
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 0.5rem;">
-                <span>🔒 Close & Settle Complaint</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 style="font-size: 16px; font-weight: 600; color: var(--text-main); margin: 0;">
+                Close &amp; settle complaint
             </h3>
-            <button type="button" onclick="closeModalDirect()" style="background: none; border: none; font-size: 1.25rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+            <button type="button" onclick="closeModalDirect()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
         </div>
 
-        <!-- Target Case Quick Summary -->
-        <div style="background-color: #f8fafc; padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1.15rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
+        <div style="background-color: var(--bg-color); padding: 12px 16px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">
             <div>
-                <span style="color: var(--text-muted); font-size: 0.75rem; display: block;">COMPLAINT NO</span>
-                <strong id="modal_complaint_no" style="font-family: 'JetBrains Mono', monospace; font-size: 1.05rem; color: var(--primary);">-</strong>
+                <span style="color: var(--text-muted); font-size: 12px; display: block;">Complaint no</span>
+                <strong id="modal_complaint_no" class="tabular" style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; color: var(--primary-dark);">-</strong>
             </div>
             <div>
-                <span style="color: var(--text-muted); font-size: 0.75rem; display: block;">BATTERY SERIAL</span>
-                <strong id="modal_battery_serial" style="font-family: 'JetBrains Mono', monospace; color: var(--text-main);">-</strong>
+                <span style="color: var(--text-muted); font-size: 12px; display: block;">Battery serial</span>
+                <strong id="modal_battery_serial" style="font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--text-main);">-</strong>
             </div>
-            <div style="grid-column: span 2; margin-top: 0.25rem;">
-                <span style="color: var(--text-muted); font-size: 0.75rem; display: block;">CUSTOMER NAME</span>
-                <strong id="modal_customer_name" style="color: var(--text-main);">-</strong>
+            <div style="grid-column: span 2; margin-top: 4px;">
+                <span style="color: var(--text-muted); font-size: 12px; display: block;">Customer name</span>
+                <strong id="modal_customer_name" style="font-weight: 500; color: var(--text-main);">-</strong>
             </div>
         </div>
 
@@ -136,55 +118,55 @@
             <input type="hidden" id="modal_complaint_id" value="">
 
             <div class="form-group">
-                <label for="modal_final_decision" class="form-label" style="font-weight: 700;">Final Decision / Settlement Code *</label>
-                <select id="modal_final_decision" class="form-control" style="font-weight: 800; font-size: 0.95rem; color: var(--primary);" required>
-                    <option value="">-- Select Final Decision --</option>
-                    <option value="F">F — Free Replacement Issued</option>
-                    <option value="P">P — Pro-Rata Settlement</option>
-                    <option value="C">C — Battery Charged & Okay</option>
-                    <option value="R">R — Dead Return / Rejected</option>
+                <label for="modal_final_decision" class="form-label">Final decision *</label>
+                <select id="modal_final_decision" class="form-control" required>
+                    <option value="">Select final decision</option>
+                    <option value="F">F — Free replacement issued</option>
+                    <option value="P">P — Pro-rata settlement</option>
+                    <option value="C">C — Battery charged &amp; okay</option>
+                    <option value="R">R — Dead return / rejected</option>
                 </select>
             </div>
 
-            <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem;">
+            <div class="form-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;">
                 <div class="form-group">
-                    <label for="modal_decision_date" class="form-label" style="font-weight: 700; font-size: 0.85rem;">Decision Date *</label>
+                    <label for="modal_decision_date" class="form-label">Decision date *</label>
                     <input type="date" id="modal_decision_date" class="form-control" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="modal_closing_date" class="form-label" style="font-weight: 700; font-size: 0.85rem;">Closing Date *</label>
+                    <label for="modal_closing_date" class="form-label">Closing date *</label>
                     <input type="date" id="modal_closing_date" class="form-control" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="modal_return_date" class="form-label" style="font-weight: 700; font-size: 0.85rem;">Return Date</label>
+                    <label for="modal_return_date" class="form-label">Return date</label>
                     <input type="date" id="modal_return_date" class="form-control">
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="modal_new_battery_number" class="form-label" style="font-weight: 700;">New Replacement Battery Serial Number (If Issued)</label>
-                <input type="text" id="modal_new_battery_number" class="form-control" style="font-family: 'JetBrains Mono', monospace; text-transform: uppercase; font-weight: 700;" placeholder="e.g. EAB0206Z19999">
+                <label for="modal_new_battery_number" class="form-label">New replacement battery serial (if issued)</label>
+                <input type="text" id="modal_new_battery_number" class="form-control" style="font-family: 'JetBrains Mono', monospace; text-transform: uppercase;" placeholder="e.g. EAB0206Z19999">
             </div>
 
             <div class="form-group">
-                <label for="modal_delivery_mode" class="form-label" style="font-weight: 700;">Delivery / Take Person Mode</label>
-                <input type="text" id="modal_delivery_mode" class="form-control" style="font-weight: 700;" placeholder="e.g. BY HIMSELF / SEND IN ROUTE / BY RETAILER">
+                <label for="modal_delivery_mode" class="form-label">Delivery / take person mode</label>
+                <input type="text" id="modal_delivery_mode" class="form-control" placeholder="e.g. BY HIMSELF / SEND IN ROUTE">
             </div>
 
             <div class="form-group">
-                <label for="modal_complaint_status" class="form-label" style="font-weight: 700;">Set Status *</label>
-                <select id="modal_complaint_status" class="form-control" style="font-weight: 800;">
-                    <option value="Closed" selected>✅ Closed</option>
-                    <option value="Rejected">❌ Rejected</option>
+                <label for="modal_complaint_status" class="form-label">Status *</label>
+                <select id="modal_complaint_status" class="form-control">
+                    <option value="Closed" selected>Closed</option>
+                    <option value="Rejected">Rejected</option>
                 </select>
             </div>
 
-            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-                <button type="button" onclick="closeModalDirect()" class="btn btn-outline" style="padding: 0.65rem 1.25rem;">Cancel</button>
-                <button type="submit" id="btn_submit_close" class="btn btn-success" style="padding: 0.65rem 1.75rem; font-weight: 800;">
-                    ✅ CONFIRM & CLOSE CASE
+            <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 20px;">
+                <button type="button" onclick="closeModalDirect()" class="btn btn-outline">Cancel</button>
+                <button type="submit" id="btn_submit_close" class="btn btn-primary">
+                    Confirm &amp; close case
                 </button>
             </div>
         </form>
@@ -255,54 +237,63 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderResults(results) {
         badge.textContent = results.length + ' Open Cases Found';
 
-        if (results.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" style="padding: 2.5rem 1rem; text-align: center; color: var(--text-muted);">
-                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🔍</div>
-                        <div style="font-weight: 700; font-size: 0.95rem;">No open complaint records matched your search query.</div>
-                        <div style="font-size: 0.8rem; margin-top: 0.2rem;">Try clearing or adjusting any of the 4 search fields above.</div>
-                    </td>
-                </tr>
-            `;
-            return;
+        if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable && jQuery.fn.DataTable.isDataTable('#close_case_table')) {
+            jQuery('#close_case_table').DataTable().destroy();
         }
 
-        tbody.innerHTML = results.map(item => `
-            <tr style="border-bottom: 1px solid var(--border-color); background-color: #ffffff;">
-                <td style="padding: 0.75rem 1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--primary);">
-                    ${escapeHtml(item.complaint_number)}
-                </td>
-                <td style="padding: 0.75rem 1rem; color: var(--text-secondary); white-space: nowrap;">
-                    ${escapeHtml(item.complaint_date)}
-                </td>
-                <td style="padding: 0.75rem 1rem;">
-                    <span class="badge" style="background-color: ${item.battery_type === 'TW' ? '#d1fae5' : '#e0f2fe'}; color: ${item.battery_type === 'TW' ? '#047857' : '#0369a1'}; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
-                        ${escapeHtml(item.battery_type)}
-                    </span>
-                    <span style="font-weight: 700; font-family: 'JetBrains Mono', monospace;">${escapeHtml(item.product_model)}</span>
-                </td>
-                <td style="padding: 0.75rem 1rem; font-weight: 700; color: var(--text-main);">
-                    ${escapeHtml(item.customer_name)}
-                </td>
-                <td style="padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
-                    ${escapeHtml(item.customer_mobile)}
-                </td>
-                <td style="padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--text-main);">
-                    ${escapeHtml(item.battery_serial_number)}
-                    ${item.is_prorata ? '<div style="font-size: 0.72rem; color: #b45309; font-weight: 800;">PRO-RATA</div>' : ''}
-                </td>
-                <td style="padding: 0.75rem 1rem; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #d97706;">
-                    ${escapeHtml(item.case_number)}
-                </td>
-                <td style="padding: 0.75rem 1rem; text-align: right; white-space: nowrap;">
-                    ${isViewer
-                        ? `<a href="/complaints/${item.id}" class="btn btn-outline" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 700;">👁️ View</a>`
-                        : `<button type="button" class="btn btn-warning" style="padding: 0.35rem 0.85rem; font-size: 0.8rem; font-weight: 800;" onclick='openCloseModal(${JSON.stringify(item)})'>🔒 Close Case</button>`
-                    }
-                </td>
-            </tr>
-        `).join('');
+        if (results.length === 0) {
+            tbody.innerHTML = '';
+        } else {
+            tbody.innerHTML = results.map(item => `
+                <tr>
+                    <td class="tabular" style="font-weight: 500; font-family: 'JetBrains Mono', monospace; color: var(--primary-dark);">
+                        ${escapeHtml(item.complaint_number)}
+                    </td>
+                    <td class="tabular" style="color: var(--text-secondary); white-space: nowrap;">
+                        ${escapeHtml(item.complaint_date)}
+                    </td>
+                    <td>
+                        <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--text-secondary); margin-right: 6px;">
+                            <span style="width: 6px; height: 6px; border-radius: 50%; background-color: ${item.battery_type === 'TW' ? '#b45309' : '#0369a1'};"></span>
+                            ${escapeHtml(item.battery_type)}
+                        </span>
+                        <span style="font-family: 'JetBrains Mono', monospace;">${escapeHtml(item.product_model)}</span>
+                    </td>
+                    <td style="font-weight: 500; color: var(--text-main);">
+                        ${escapeHtml(item.customer_name)}
+                    </td>
+                    <td class="tabular" style="font-family: 'JetBrains Mono', monospace; color: var(--text-muted);">
+                        ${escapeHtml(item.customer_mobile)}
+                    </td>
+                    <td style="font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--text-main);">
+                        ${escapeHtml(item.battery_serial_number)}
+                        ${item.is_prorata ? '<div style="margin-top: 2px;"><span class="badge badge-pending">Pro-rata</span></div>' : ''}
+                    </td>
+                    <td class="tabular" style="font-family: 'JetBrains Mono', monospace; color: var(--text-secondary);">
+                        ${escapeHtml(item.case_number)}
+                    </td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        ${isViewer
+                            ? `<a href="/complaints/${item.id}" class="btn btn-outline" style="height: 28px; padding: 0 10px; font-size: 12px;">View</a>`
+                            : `<button type="button" class="btn btn-warning" style="height: 28px; padding: 0 10px; font-size: 12px;" onclick='openCloseModal(${JSON.stringify(item)})'>Close case</button>`
+                        }
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+            jQuery('#close_case_table').DataTable({
+                dom: '<"dt-top"lf><"dt-scroll"t><"dt-bottom"ip>',
+                autoWidth: false,
+                pageLength: 15,
+                order: [],
+                language: {
+                    search: 'Filter:',
+                    emptyTable: 'No open complaints matched your search.'
+                }
+            });
+        }
     }
 
     function escapeHtml(str) {

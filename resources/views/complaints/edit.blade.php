@@ -5,8 +5,8 @@
 @section('content')
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">✏️ EDIT RECORD: {{ $complaint->complaint_number }}</h2>
-            <a href="{{ route('complaints.show', $complaint->id) }}" class="btn btn-outline">⬅️ CANCEL</a>
+            <h2 class="card-title tabular">Edit record #{{ $complaint->complaint_number }}</h2>
+            <a href="{{ route('complaints.show', $complaint->id) }}" class="btn btn-outline">Cancel</a>
         </div>
 
         <form action="{{ route('complaints.update', $complaint->id) }}" method="POST" enctype="multipart/form-data">

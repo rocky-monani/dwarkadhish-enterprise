@@ -89,10 +89,12 @@ class BatteryComplaintController extends Controller
         @set_time_limit(240);
         $request->validate([
             'serial_number' => 'required|string|max:100',
+            'complaint_number' => 'nullable|string|max:100',
         ]);
 
         $serialNumber = trim($request->input('serial_number'));
-        $result = $this->batteryConnectService->lookup($serialNumber);
+        $complaintNumber = $request->input('complaint_number') ? trim($request->input('complaint_number')) : null;
+        $result = $this->batteryConnectService->lookup($serialNumber, $complaintNumber);
 
         return response()->json($result);
     }

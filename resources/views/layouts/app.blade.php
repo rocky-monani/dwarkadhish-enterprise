@@ -9,37 +9,46 @@
     <!-- System Fonts + Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 
     <style>
         :root {
-            /* Ultra-Fast Clean High-Contrast Palette */
-            --primary: #16a34a;
-            --primary-dark: #15803d;
+            /* Subtle Professional Slate & Forest Theme */
+            --primary: #15803d;
+            --primary-dark: #166534;
             --primary-light: #f0fdf4;
             --primary-border: #bbf7d0;
-            
-            --bg-color: #f1f5f9;
+            --amaron-green: #15803d;
+
+            --bg-color: #f4f6f8;
             --card-bg: #ffffff;
-            
-            --sidebar-bg: #0f172a;
-            --sidebar-hover: #1e293b;
-            --sidebar-active: #16a34a;
-            
+            --raised-bg: #eef2f6;
+
+            --sidebar-bg: #141b24;
+            --sidebar-hover: #1d2633;
+            --sidebar-active: #243040;
+            --sidebar-border: rgba(226, 232, 240, 0.08);
+
             --text-main: #0f172a;
-            --text-secondary: #334155;
+            --text-secondary: #475569;
             --text-muted: #64748b;
-            
-            --border-color: #cbd5e1;
-            --border-focus: #16a34a;
-            
-            --accent-amber: #d97706;
-            --accent-red: #dc2626;
-            --accent-blue: #0284c7;
-            
-            --radius-sm: 4px;
-            --radius-md: 6px;
-            --radius-lg: 8px;
+
+            --border-color: rgba(15, 23, 42, 0.08);
+            --border-strong: rgba(15, 23, 42, 0.14);
+            --border-focus: #15803d;
+
+            --accent-amber: #b45309;
+            --accent-red: #b91c1c;
+            --accent-blue: #0369a1;
+
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+
+            --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.07);
+            --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
         }
 
         * {
@@ -52,23 +61,28 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-main);
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.5;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
         }
 
-        /* Fast Layout Containers */
+        .tabular {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* Layout Shell */
         .app-layout {
             display: flex;
-            width: 100vw;
+            width: 100%;
             min-height: 100vh;
         }
 
-        /* High-Speed Sidebar */
+        /* Sidebar */
         .sidebar {
-            width: 250px;
+            width: 256px;
             background-color: var(--sidebar-bg);
-            color: #ffffff;
+            color: #ededed;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -77,105 +91,124 @@
             bottom: 0;
             left: 0;
             z-index: 100;
+            border-right: 1px solid var(--sidebar-border);
         }
 
         .sidebar-brand {
-            padding: 1rem 1.15rem;
-            border-bottom: 2px solid var(--primary);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--sidebar-border);
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 12px;
             text-decoration: none;
-            color: #ffffff;
-            background-color: #0b1329;
+            color: #ededed;
         }
 
         .brand-logo-img {
-            width: 38px;
-            height: 38px;
+            width: 36px;
+            height: 36px;
             object-fit: cover;
-            border-radius: 4px;
-            border: 2px solid var(--primary);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
             background: #ffffff;
             flex-shrink: 0;
         }
 
+        .brand-text-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
         .brand-title {
-            font-weight: 900;
-            font-size: 1.05rem;
-            color: #ffffff;
+            font-weight: 600;
+            font-size: 15px;
+            color: #ededed;
             line-height: 1.1;
         }
 
         .brand-subtitle {
-            font-size: 0.65rem;
-            color: #86efac;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
+            font-size: 12px;
+            color: #85858b;
+            font-weight: 400;
         }
 
         .sidebar-menu {
-            padding: 0.75rem 0.5rem;
+            padding: 12px;
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 4px;
             flex-grow: 1;
             overflow-y: auto;
+        }
+
+        .sidebar-section-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            padding: 20px 12px 4px 12px;
+            border-top: 1px solid var(--sidebar-border);
+            margin-top: 8px;
         }
 
         .nav-item-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.55rem 0.85rem;
-            color: #cbd5e1;
+            gap: 10px;
+            height: 36px;
+            padding: 0 12px;
+            color: #94a3b8;
             text-decoration: none;
-            font-weight: 600;
-            font-size: 0.85rem;
-            border-radius: var(--radius-sm);
+            font-weight: 500;
+            font-size: 14px;
+            border-radius: 8px;
+            transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
         }
 
         .nav-item-link:hover {
-            color: #ffffff;
+            color: #f1f5f9;
             background-color: var(--sidebar-hover);
         }
 
         .nav-item-link.active {
-            color: #ffffff;
-            background-color: var(--primary);
-            font-weight: 800;
+            color: #f8fafc;
+            background-color: var(--sidebar-active);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .nav-item-link.active svg {
+            color: #4ade80;
         }
 
         .nav-item-link svg {
-            width: 18px;
-            height: 18px;
-            stroke-width: 2.2;
+            width: 16px;
+            height: 16px;
+            stroke-width: 1.5;
             flex-shrink: 0;
         }
 
         .sidebar-footer {
-            padding: 0.75rem 1rem;
-            border-top: 1px solid #1e293b;
-            background-color: #090d16;
-            font-size: 0.75rem;
+            padding: 16px;
+            border-top: 1px solid var(--sidebar-border);
+            font-size: 12px;
+            color: #85858b;
         }
 
         /* Main Shell & Top Bar */
         .main-wrapper {
-            margin-left: 250px;
+            margin-left: 256px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            width: calc(100vw - 250px);
+            width: calc(100% - 256px);
         }
 
         .top-navbar {
             height: 56px;
             background-color: #ffffff;
-            border-bottom: 2px solid var(--primary);
-            padding: 0 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -185,80 +218,93 @@
         }
 
         .page-header-title {
-            font-size: 1.15rem;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 600;
             color: var(--text-main);
         }
 
         .top-navbar-actions {
             display: flex;
             align-items: center;
-            gap: 0.65rem;
+            gap: 8px;
         }
 
         .btn-header-action {
             display: inline-flex;
             align-items: center;
-            gap: 0.4rem;
-            padding: 0.4rem 0.8rem;
-            font-size: 0.82rem;
-            font-weight: 700;
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--border-color);
+            gap: 8px;
+            height: 32px;
+            padding: 0 12px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
+            border: 1px solid var(--border-strong);
             background-color: #ffffff;
             color: var(--text-secondary);
             cursor: pointer;
             text-decoration: none;
+            transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out), border-color 150ms var(--ease-out);
         }
 
         .btn-header-action:hover {
-            background-color: var(--primary-light);
-            color: var(--primary-dark);
-            border-color: var(--primary);
+            background-color: var(--raised-bg);
+            color: var(--text-main);
+        }
+
+        .btn-header-action svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 1.5;
+            flex-shrink: 0;
         }
 
         .user-profile-tag {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.82rem;
-            font-weight: 700;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-secondary);
-            padding-left: 0.85rem;
+            padding-left: 12px;
+            margin-left: 4px;
             border-left: 1px solid var(--border-color);
         }
 
         .user-avatar {
-            width: 30px;
-            height: 30px;
-            background-color: var(--primary);
-            color: #ffffff;
-            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            background-color: var(--raised-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 9999px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
-            font-size: 0.8rem;
+            font-weight: 500;
+            font-size: 12px;
         }
 
-        /* Fast Content Container */
+        /* Content Container */
         .content-area {
-            padding: 1.25rem 1.5rem;
+            padding: 24px;
             flex-grow: 1;
+            max-width: 1560px;
+            width: 100%;
         }
 
-        /* Clean High-Speed Cards */
+        /* Cards */
         .card {
             background: var(--card-bg);
             border-radius: var(--radius-md);
             border: 1px solid var(--border-color);
-            padding: 1.25rem;
-            margin-bottom: 1.15rem;
+            box-shadow: var(--shadow-sm);
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
         .card-header {
-            margin-bottom: 1rem;
-            padding-bottom: 0.65rem;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -266,73 +312,82 @@
         }
 
         .card-title {
-            font-size: 1rem;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 600;
             color: var(--text-main);
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 8px;
         }
 
-        /* Fast Standard Buttons */
+        /* Buttons */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.4rem;
-            padding: 0.55rem 1.1rem;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-radius: var(--radius-sm);
+            gap: 8px;
+            height: 36px;
+            padding: 0 16px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 8px;
             border: 1px solid transparent;
             cursor: pointer;
             text-decoration: none;
             outline: none;
             white-space: nowrap;
+            transition: background-color 150ms var(--ease-out), border-color 150ms var(--ease-out), color 150ms var(--ease-out), transform 150ms var(--ease-out);
         }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: #ffffff;
+        .btn:active {
+            transform: scale(0.98);
         }
 
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
+        .btn:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
         }
 
+        .btn-primary,
         .btn-success {
             background-color: var(--primary);
             color: #ffffff;
         }
 
+        .btn-primary:hover,
         .btn-success:hover {
             background-color: var(--primary-dark);
         }
 
         .btn-secondary {
-            background-color: #64748b;
-            color: #ffffff;
+            background-color: var(--raised-bg);
+            color: var(--text-secondary);
+            border-color: var(--border-strong);
         }
 
         .btn-secondary:hover {
-            background-color: #475569;
+            background-color: #e4e4e7;
+            color: var(--text-main);
         }
 
         .btn-outline {
             background-color: #ffffff;
-            border-color: #cbd5e1;
-            color: #334155;
+            border-color: var(--border-strong);
+            color: var(--text-main);
         }
 
         .btn-outline:hover {
-            background-color: #f8fafc;
-            color: #0f172a;
-            border-color: #94a3b8;
+            background-color: var(--raised-bg);
         }
 
         .btn-warning {
-            background-color: var(--accent-amber);
-            color: #ffffff;
+            background-color: #fef3c7;
+            color: #92400e;
+            border-color: #fde68a;
+        }
+
+        .btn-warning:hover {
+            background-color: #fde68a;
         }
 
         .btn-danger {
@@ -345,57 +400,62 @@
         }
 
         .btn:disabled {
-            opacity: 0.6;
+            opacity: 0.55;
             cursor: not-allowed;
         }
 
-        /* Fast Compact Form Controls */
+        /* Form Controls */
         .form-group {
-            margin-bottom: 0.9rem;
+            margin-bottom: 16px;
         }
 
         .form-label {
             display: block;
-            font-size: 0.82rem;
-            font-weight: 700;
+            font-size: 13px;
+            font-weight: 500;
             color: var(--text-secondary);
-            margin-bottom: 0.3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.02em;
+            margin-bottom: 6px;
         }
 
         .form-control {
             width: 100%;
-            padding: 0.55rem 0.75rem;
-            font-size: 0.9rem;
-            border: 1.5px solid var(--border-color);
-            border-radius: var(--radius-sm);
+            height: 36px;
+            padding: 0 12px;
+            font-size: 14px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
             background-color: #ffffff;
             color: var(--text-main);
             font-family: inherit;
+            transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+        }
+
+        textarea.form-control {
+            height: auto;
+            padding: 8px 12px;
         }
 
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+            box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.16);
         }
 
         .form-row {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 0.9rem;
+            gap: 16px;
         }
 
         /* Status Badges */
         .badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.3rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 800;
+            gap: 6px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .badge-open {
@@ -417,66 +477,213 @@
         }
 
         .badge-info {
-            background-color: #e0f2fe;
-            color: #0369a1;
-            border: 1px solid #bae6fd;
+            background-color: #f4f4f5;
+            color: #525252;
+            border: 1px solid var(--border-strong);
         }
 
-        /* High-Density Data Tables */
+        /* Data Tables */
         table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
         }
 
         th {
-            background-color: #f8fafc;
+            background-color: var(--bg-color);
             color: var(--text-secondary);
-            font-size: 0.72rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.6rem 0.75rem;
-            border-bottom: 2px solid #cbd5e1;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border-strong);
             text-align: left;
         }
 
         td {
-            padding: 0.6rem 0.75rem;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color);
             color: var(--text-main);
             vertical-align: middle;
         }
 
         tbody tr:hover {
-            background-color: #f8fafc;
+            background-color: #fafafa;
+        }
+
+        /* DataTables Theme Overrides */
+        .dataTables_wrapper {
+            padding: 0;
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        .dataTables_wrapper .dt-top,
+        .dataTables_wrapper .dt-bottom {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 12px 20px;
+            background-color: #ffffff;
+        }
+
+        .dataTables_wrapper .dt-top {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dataTables_wrapper .dt-top:empty,
+        .dataTables_wrapper .dt-bottom:empty {
+            display: none;
+        }
+
+        .dataTables_wrapper .dt-bottom {
+            border-top: 1px solid var(--border-color);
+        }
+
+        .dataTables_wrapper .dt-scroll {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            float: none !important;
+            text-align: left !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .dataTables_wrapper .dataTables_filter label,
+        .dataTables_wrapper .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .dataTables_wrapper .dataTables_filter input,
+        .dataTables_wrapper .dataTables_length select {
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: 8px;
+            background-color: #ffffff;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 13px;
+            margin: 0 !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .dataTables_wrapper table.dataTable {
+            border-collapse: collapse !important;
+            border-bottom: none !important;
+            width: 100% !important;
+            margin: 0 !important;
+        }
+
+        .dataTables_wrapper table.dataTable thead th {
+            background-color: var(--bg-color);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            padding: 11px 14px !important;
+            border-bottom: 1px solid var(--border-strong) !important;
+            white-space: nowrap;
+        }
+
+        .dataTables_wrapper table.dataTable thead th.sorting,
+        .dataTables_wrapper table.dataTable thead th.sorting_asc,
+        .dataTables_wrapper table.dataTable thead th.sorting_desc {
+            padding-right: 26px !important;
+        }
+
+        .dataTables_wrapper table.dataTable tbody td {
+            padding: 11px 14px;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+
+        .dataTables_wrapper table.dataTable tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .dataTables_wrapper table.dataTable.no-footer {
+            border-bottom: none;
+        }
+
+        .dataTables_wrapper .dataTables_paginate {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 6px !important;
+            border: 1px solid var(--border-color) !important;
+            padding: 4px 10px !important;
+            margin: 0 !important;
+            font-size: 12px !important;
+            color: var(--text-secondary) !important;
+            background: #ffffff !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+            background: var(--primary) !important;
+            color: #ffffff !important;
+            border-color: var(--primary) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover:not(.disabled):not(.current) {
+            background: var(--raised-bg) !important;
+            color: var(--text-main) !important;
+            border-color: var(--border-strong) !important;
+        }
+
+        .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.45;
+            cursor: default;
         }
 
         /* Toast Notifications */
         #toast_container {
             position: fixed;
-            bottom: 1.25rem;
-            right: 1.25rem;
+            bottom: 20px;
+            right: 20px;
             z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 0.65rem;
+            gap: 8px;
             max-width: 360px;
         }
 
         .toast {
             background-color: #ffffff;
             color: var(--text-main);
-            padding: 0.75rem 1rem;
-            border-radius: var(--radius-sm);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            border-left: 4px solid var(--primary);
-            font-size: 0.85rem;
-            font-weight: 700;
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--primary);
+            font-size: 13px;
+            font-weight: 500;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 0.75rem;
+            gap: 12px;
         }
 
         .toast.success { border-left-color: var(--primary); }
@@ -487,13 +694,14 @@
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(15, 23, 42, 0.6);
+            background-color: rgba(15, 15, 16, 0.55);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 1000;
             opacity: 0;
             pointer-events: none;
+            transition: opacity 180ms var(--ease-out);
         }
 
         .modal-overlay.active {
@@ -506,29 +714,30 @@
             width: 90%;
             max-width: 480px;
             border-radius: var(--radius-md);
-            padding: 1.35rem;
+            padding: 24px;
             border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-md);
         }
 
         .modal-title {
-            font-size: 1.05rem;
-            font-weight: 800;
+            font-size: 16px;
+            font-weight: 600;
             color: var(--text-main);
-            margin-bottom: 0.4rem;
+            margin-bottom: 8px;
         }
 
         .modal-body {
-            font-size: 0.88rem;
+            font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 1.25rem;
-            line-height: 1.4;
+            margin-bottom: 20px;
+            line-height: 1.5;
         }
 
         .modal-actions {
             display: flex;
             align-items: center;
             justify-content: flex-end;
-            gap: 0.65rem;
+            gap: 8px;
         }
     </style>
     @stack('styles')
@@ -552,40 +761,43 @@
                         <button type="button" onclick="startBatchFetchPending('ALL')" class="btn-header-action"
                             style="background-color: var(--primary); color: #ffffff; border-color: var(--primary);"
                             title="Fetch Connect details and screenshots for all open pending complaints">
-                            ⚡ Fetch Pending Details
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                            </svg>
+                            Fetch pending
                         </button>
                         <button type="button" onclick="openBatchFetchModal()" class="btn-header-action"
                             title="Fetch screenshots for range of complaint numbers">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                                 <circle cx="12" cy="13" r="4" />
                             </svg>
-                            📷 Fetch Range
+                            Fetch range
                         </button>
                         <button type="button" onclick="openBatteryConnectLoginBrowser()" class="btn-header-action"
                             title="Open Google Chrome session for Battery Connect">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                                 <polyline points="15 3 21 3 21 9" />
                                 <line x1="10" y1="14" x2="21" y2="3" />
                             </svg>
-                            🔑 Battery Connect Browser
+                            Battery Connect
                         </button>
                     @endif
 
                     <div class="user-profile-tag">
                         <div class="user-avatar">{{ strtoupper(substr(auth()->user()->name ?? 'O', 0, 1)) }}</div>
-                        <div style="display: flex; flex-direction: column; line-height: 1.1;">
-                            <span style="font-weight: 800;">{{ auth()->user()->name ?? 'User' }}</span>
-                            <span style="font-size: 0.68rem; color: var(--primary); font-weight: 800; text-transform: uppercase;">
-                                {{ auth()->user()->role ?? 'operator' }}
+                        <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                            <span style="font-weight: 500; color: var(--text-main);">{{ auth()->user()->name ?? 'User' }}</span>
+                            <span style="font-size: 12px; color: var(--text-muted); font-weight: 400;">
+                                {{ ucfirst(auth()->user()->role ?? 'operator') }}
                             </span>
                         </div>
-                        <form action="{{ route('logout') }}" method="POST" style="display:inline; margin-left: 0.35rem;">
+                        <form action="{{ route('logout') }}" method="POST" style="display:inline; margin-left: 8px;">
                             @csrf
-                            <button type="submit" class="btn-header-action" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Logout</button>
+                            <button type="submit" class="btn-header-action" style="height: 28px; padding: 0 10px; font-size: 12px;">Log out</button>
                         </form>
                     </div>
                 </div>
@@ -689,26 +901,26 @@
                     </label>
                 </div>
 
-                <!-- QUICK BULK PENDING ACTION BUTTONS -->
-                <div style="background-color: #f8fafc; padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.4rem;">
-                    <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">⚡ Quick Pending Bulk Actions:</div>
-                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                        <button type="button" onclick="startBatchFetchPending('TW')" class="btn" style="background-color: #d97706; color: #ffffff; font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem;" title="Fetch details for all open 2W pending complaints">
-                            🏍️ Fetch 2W Pending
+                <!-- Quick Pending Bulk Actions -->
+                <div style="background-color: var(--bg-color); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+                    <div style="font-size: 12px; font-weight: 500; color: var(--text-muted);">Quick pending bulk actions</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="startBatchFetchPending('TW')" class="btn btn-warning" style="height: 32px; padding: 0 12px; font-size: 12px;" title="Fetch details for all open 2W pending complaints">
+                            Fetch 2W pending
                         </button>
-                        <button type="button" onclick="startBatchFetchPending('FW')" class="btn btn-success" style="font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem;" title="Fetch details for all open 4W pending complaints">
-                            🚗 Fetch 4W Pending
+                        <button type="button" onclick="startBatchFetchPending('FW')" class="btn btn-primary" style="height: 32px; padding: 0 12px; font-size: 12px;" title="Fetch details for all open 4W pending complaints">
+                            Fetch 4W pending
                         </button>
-                        <button type="button" onclick="startBatchFetchPending('ALL')" class="btn btn-primary" style="font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem;" title="Fetch details for all open pending complaints">
-                            ⚡ Fetch All Pending
+                        <button type="button" onclick="startBatchFetchPending('ALL')" class="btn btn-outline" style="height: 32px; padding: 0 12px; font-size: 12px;" title="Fetch details for all open pending complaints">
+                            Fetch all pending
                         </button>
                     </div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 0.65rem; margin-top: 0.25rem;">
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px;">
                     <button type="button" onclick="closeBatchFetchModal()" class="btn btn-outline">Cancel</button>
-                    <button type="submit" id="btn_start_batch_fetch" class="btn btn-success" style="font-weight: 700;">
-                        🚀 Fetch Range Screenshots
+                    <button type="submit" id="btn_start_batch_fetch" class="btn btn-primary">
+                        Fetch range screenshots
                     </button>
                 </div>
             </form>
@@ -716,42 +928,41 @@
 
         <!-- Live Progress Container -->
         <div id="batch_fetch_progress_container" style="display: none;">
-            <div style="margin-bottom: 1rem;">
-                <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.35rem;">
+            <div style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; margin-bottom: 6px;">
                     <span id="bf_progress_label">Preparing batch fetch...</span>
-                    <span id="bf_progress_percentage">0%</span>
+                    <span id="bf_progress_percentage" class="tabular">0%</span>
                 </div>
-                <div style="width: 100%; height: 8px; background-color: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                <div style="width: 100%; height: 8px; background-color: var(--raised-bg); border-radius: 4px; overflow: hidden;">
                     <div id="bf_progress_bar" style="width: 0%; height: 100%; background-color: var(--primary); transition: width 0.2s linear;"></div>
                 </div>
-                <div id="bf_current_status" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; font-family: 'JetBrains Mono', monospace;">
+                <div id="bf_current_status" style="font-size: 12px; color: var(--text-muted); margin-top: 6px; font-family: 'JetBrains Mono', monospace;">
                     Initializing process...
                 </div>
             </div>
 
             <!-- Log Table -->
-            <div style="max-height: 240px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 4px; margin-bottom: 1rem;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+            <div style="max-height: 260px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 16px;">
+                <table id="batch_progress_table">
                     <thead>
-                        <tr style="background-color: #f8fafc; border-bottom: 1px solid var(--border-color); text-align: left; color: var(--text-muted);">
-                            <th style="padding: 0.4rem 0.65rem;">Complaint #</th>
-                            <th style="padding: 0.4rem 0.65rem;">Serial #</th>
-                            <th style="padding: 0.4rem 0.65rem; text-align: center;">Status</th>
-                            <th style="padding: 0.4rem 0.65rem; text-align: right;">Action / Result</th>
+                        <tr>
+                            <th>Complaint #</th>
+                            <th>Serial #</th>
+                            <th style="text-align: center;">Status</th>
+                            <th style="text-align: right;">Action / Result</th>
                         </tr>
                     </thead>
                     <tbody id="bf_results_table_body">
-                        <!-- Dynamic rows -->
                     </tbody>
                 </table>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <button type="button" id="btn_stop_batch_fetch" onclick="stopBatchFetchProcess()" class="btn btn-warning" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-                    ⏹️ Stop Process
+                <button type="button" id="btn_stop_batch_fetch" onclick="stopBatchFetchProcess()" class="btn btn-warning" style="height: 32px; padding: 0 12px; font-size: 12px;">
+                    Stop process
                 </button>
-                <button type="button" id="btn_close_batch_progress" onclick="closeBatchFetchModal(true)" class="btn btn-primary" style="display: none; font-weight: 700;">
-                    Done / Close
+                <button type="button" id="btn_close_batch_progress" onclick="closeBatchFetchModal(true)" class="btn btn-primary" style="display: none;">
+                    Done
                 </button>
             </div>
         </div>
@@ -1041,6 +1252,32 @@ async function executeBatchFetchProcess(complaints) {
 
     showToast(`Batch completed: ${successCount} details & screenshots fetched.`, 'success');
 }
+</script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery !== 'undefined' && jQuery.fn && jQuery.fn.DataTable) {
+        jQuery('.js-datatable').each(function() {
+            const $tbl = jQuery(this);
+            if (!jQuery.fn.DataTable.isDataTable(this)) {
+                const usePaging = $tbl.data('dt-paging') === true;
+                $tbl.DataTable({
+                    dom: usePaging ? '<"dt-top"lf><"dt-scroll"t><"dt-bottom"ip>' : '<"dt-top"f><"dt-scroll"t>',
+                    paging: usePaging,
+                    info: usePaging,
+                    autoWidth: false,
+                    pageLength: 25,
+                    order: [],
+                    language: {
+                        search: 'Filter:',
+                        emptyTable: $tbl.data('dt-empty') || 'No records found.'
+                    }
+                });
+            }
+        });
+    }
+});
 </script>
 @stack('scripts')
 </body>

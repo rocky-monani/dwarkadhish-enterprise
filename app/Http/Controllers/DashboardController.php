@@ -83,10 +83,46 @@ class DashboardController extends Controller
             })
             ->count();
 
-        $recentComplaints = BatteryComplaint::active()
-            ->latest('id')
-            ->take(10)
-            ->get();
+        $backdatePendingTWCount = BatteryComplaint::active()
+            ->where('complaint_status', 'Open')
+            ->whereDate('complaint_date', '<', $today)
+            ->where('battery_type', 'TW')
+            ->count();
+
+        $backdatePendingFWCount = BatteryComplaint::active()
+            ->where('complaint_status', 'Open')
+            ->whereDate('complaint_date', '<', $today)
+            ->where('battery_type', '!=', 'TW')
+            ->count();
+
+        // All months that have open (return entry pending) TW or FW complaints
+        $openComplaintsForChart = BatteryComplaint::active()
+            ->where('complaint_status', 'Open')
+            ->whereNotNull('complaint_date')
+            ->orderBy('complaint_date', 'asc')
+            ->get(['complaint_date', 'battery_type', 'excel_sheet']);
+
+        $monthlyMap = [];
+        foreach ($openComplaintsForChart as $item) {
+            $ym = $item->complaint_date->format('Y-m');
+            if (!isset($monthlyMap[$ym])) {
+                $monthlyMap[$ym] = [
+                    'label' => $item->complaint_date->format('M Y'),
+                    'tw' => 0,
+                    'fw' => 0,
+                    'total' => 0,
+                ];
+            }
+            $isTw = ($item->battery_type === 'TW' || $item->excel_sheet === '2W');
+            if ($isTw) {
+                $monthlyMap[$ym]['tw']++;
+            } else {
+                $monthlyMap[$ym]['fw']++;
+            }
+            $monthlyMap[$ym]['total']++;
+        }
+
+        $monthlyPendingChart = array_values($monthlyMap);
 
         // Check Automation Microservice Status
         $automationHealth = $this->batteryConnectService->checkHealth();
@@ -95,6 +131,9 @@ class DashboardController extends Controller
             'todaysComplaints',
             'todaysTwCount',
             'todaysFwCount',
+            'backdatePendingTWCount',
+            'backdatePendingFWCount',
+            'monthlyPendingChart',
             'todaysBatteryChecks',
             'todaysProrataCases',
             'totalSuccessfulCaptures',
@@ -104,7 +143,6 @@ class DashboardController extends Controller
             'pendingPrintCount',
             'twCount',
             'fwCount',
-            'recentComplaints',
             'automationHealth'
         ));
     }

@@ -62,7 +62,7 @@ class CloseCaseDateRulesTest extends TestCase
         $response = $this->actingAs($user)->get('/complaints/close-case');
         $response->assertStatus(200);
         $response->assertSee('id="modal_return_date"', false);
-        $response->assertSee('-- Select Final Decision --', false);
+        $response->assertSee('Select final decision', false);
         $response->assertSee('window.location.reload()', false);
     }
 }

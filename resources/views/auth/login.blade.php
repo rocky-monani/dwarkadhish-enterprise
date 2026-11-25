@@ -1,65 +1,55 @@
 @extends('layouts.app')
 
-@section('title', 'Login - Amaron Service Portal')
+@section('title', 'Sign in — Dwarkadhish Automobiles')
 
 @section('content')
-<div style="width: 100%; max-width: 440px; margin: 0 auto;">
+<div style="width: 100%; max-width: 420px; margin: 0 auto;">
 
-    <!-- AMARON PORTAL BRANDED LOGIN CARD -->
-    <div class="card" style="box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08); border-top: 5px solid #76b82a; border-radius: 12px; padding: 2.25rem 2rem; background: #ffffff;">
-        
-        <div style="text-align: center; margin-bottom: 1.75rem;">
-            <!-- Official Amaron Logo Header -->
-            <div style="display: inline-flex; flex-direction: column; align-items: center; justify-content: center;">
-                <span style="color: #76b82a; font-weight: 900; font-size: 2.2rem; letter-spacing: -0.03em; line-height: 1;">
-                    AMARON
-                </span>
-                <span style="font-size: 0.65rem; font-weight: 800; color: #111827; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.15rem;">
-                    LASTS LONG, REALLY LONG.
-                </span>
+    <div class="card" style="padding: 32px; margin-bottom: 0;">
+        <div style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; color: var(--text-muted);">
+                <span style="width: 6px; height: 6px; background-color: var(--primary); border-radius: 50%; display: inline-block;"></span>
+                <span>Amaron Authorized Service</span>
             </div>
-
-            <div style="height: 1px; background-color: #e5e7eb; width: 100%; margin: 1.25rem 0 1rem 0;"></div>
-
-            <h2 style="color: #1f2937; font-weight: 800; font-size: 1.2rem; margin-top: 0;">
+            <h1 style="color: var(--text-main); font-weight: 600; font-size: 20px; margin: 0;">
                 Dwarkadhish Automobiles
-            </h2>
-            <p style="color: #6b7280; font-size: 0.82rem; margin-top: 0.2rem;">
-                Amara Raja Energy & Mobility Ltd. Authorized Portal
+            </h1>
+            <p style="color: var(--text-secondary); font-size: 13px; margin-top: 4px;">
+                Sign in to battery warranty and inward operations
             </p>
         </div>
 
         @if($errors->any())
-            <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 0.85rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.85rem; color: #991b1b; font-weight: 600;">
-                <span>{{ $errors->first() }}</span>
+            <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 3px solid var(--accent-red); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #991b1b; font-weight: 500;">
+                {{ $errors->first() }}
             </div>
         @endif
 
         <form action="{{ route('login') }}" method="POST">
             @csrf
             <div class="form-group">
-                <label class="form-label" for="email" style="font-weight: 700; color: #374151;">Operator Email Address</label>
-                <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" placeholder="operator@dwarkadhish.com" required autofocus style="border-radius: 8px; padding: 0.7rem 0.9rem;">
+                <label class="form-label" for="email">Email address</label>
+                <input type="email" name="email" id="email" class="form-control" value="{{ old('email') }}" placeholder="operator@dwarkadhish.com" required autofocus>
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password" style="font-weight: 700; color: #374151;">Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required style="border-radius: 8px; padding: 0.7rem 0.9rem;">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="Password" required>
             </div>
 
-            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
-                <label style="font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; gap: 0.45rem; color: #4b5563; font-weight: 600;">
-                    <input type="checkbox" name="remember" value="1" style="width: 16px; height: 16px; accent-color: #76b82a;"> Remember Me
+            <div class="form-group" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <label style="font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-secondary);">
+                    <input type="checkbox" name="remember" value="1" style="width: 16px; height: 16px; accent-color: var(--primary);"> Remember me
                 </label>
             </div>
 
-            <button type="submit" class="btn" style="width: 100%; padding: 0.78rem; font-size: 0.95rem; font-weight: 800; background-color: #76b82a; color: #ffffff; border: none; border-radius: 8px; cursor: pointer; transition: background-color 0.15s ease;">
-                LOGIN TO PORTAL →
+            <button type="submit" class="btn btn-primary" style="width: 100%; height: 40px; font-size: 14px;">
+                Sign in
             </button>
         </form>
 
-        <div style="text-align: center; margin-top: 1.75rem; padding-top: 1rem; border-top: 1px solid #e5e7eb; font-size: 0.75rem; color: #9ca3af;">
-            Dwarkadhish Enterprise ERP • Amara Raja Authorized Service
+        <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 12px; color: var(--text-muted);">
+            Dwarkadhish Enterprise · Amara Raja Authorized Service
         </div>
     </div>
 

@@ -1,13 +1,13 @@
 <aside class="sidebar">
     <div>
-        <!-- Brand Header -->
-        <a href="{{ route('dashboard') }}" class="sidebar-brand">
-            <img src="{{ asset('images/site_logo.png') }}" alt="Dwarkadhish Enterprise Logo" class="brand-logo-img">
-            <div class="brand-text-container">
-                <span class="brand-title">AMARON</span>
-                <span class="brand-subtitle">DWARKADHISH ERP</span>
-            </div>
-        </a>
+            <!-- Brand Header -->
+            <a href="{{ route('dashboard') }}" class="sidebar-brand">
+                <img src="{{ asset('images/site_logo.png') }}" alt="Dwarkadhish Enterprise Logo" class="brand-logo-img">
+                <div class="brand-text-container">
+                    <span class="brand-title">Amaron</span>
+                    <span class="brand-subtitle">Dwarkadhish ERP</span>
+                </div>
+            </a>
 
         <!-- Sidebar Navigation Items -->
         <nav class="sidebar-menu">
@@ -23,8 +23,8 @@
             </a>
 
             <!-- BATTERY COMPLAINTS SECTION -->
-            <div style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.9rem 0.95rem 0.3rem 0.95rem; border-top: 1px solid #e5e7eb; margin-top: 0.5rem;">
-                📋 COMPLAINT MANAGEMENT
+            <div class="sidebar-section-label">
+                Complaints
             </div>
 
             @if(!auth()->user()?->isViewer())
@@ -70,8 +70,8 @@
             </a>
 
             <!-- DATA MANAGEMENT SECTION -->
-            <div style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.9rem 0.95rem 0.3rem 0.95rem; border-top: 1px solid #e5e7eb; margin-top: 0.5rem;">
-                📊 EXCEL DATA CENTER
+            <div class="sidebar-section-label">
+                Excel data
             </div>
 
             @if(auth()->user() && auth()->user()->isAdmin())
@@ -97,8 +97,8 @@
             </a>
 
             @if(auth()->user() && auth()->user()->role === 'admin')
-                <div style="font-size: 0.7rem; font-weight: 800; color: #6b7280; text-transform: uppercase; letter-spacing: 0.06em; padding: 0.9rem 0.95rem 0.3rem 0.95rem; border-top: 1px solid #e5e7eb; margin-top: 0.5rem;">
-                    ⚙️ SYSTEM CONTROL
+                <div class="sidebar-section-label">
+                    System
                 </div>
                 <a href="{{ route('settings.index') }}"
                     class="nav-item-link {{ request()->routeIs('settings.index') ? 'active' : '' }}">
@@ -114,12 +114,12 @@
 
     <!-- Sidebar Footer -->
     <div class="sidebar-footer">
-        <div class="system-status-badge">
-            <span style="color: #6b7280; font-size: 0.75rem;">Battery Connect Service:</span>
-            <div style="display: flex; align-items: center; gap: 0.4rem; color: #10b981; font-weight: 700;">
-                <span class="status-dot online"></span>
-                <span>Active</span>
-            </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <span>Battery Connect</span>
+            <span style="display: inline-flex; align-items: center; gap: 6px; color: #4cc38a; font-weight: 500;">
+                <span style="width: 6px; height: 6px; background-color: #4cc38a; border-radius: 50%;"></span>
+                Active
+            </span>
         </div>
     </div>
 </aside>
