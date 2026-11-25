@@ -17,86 +17,47 @@ class DashboardController extends Controller
 
     public function index()
     {
-        $today = Carbon::today();
+        $todayStr = Carbon::today()->toDateString();
 
-        // Operational Summary Metrics
-        $todaysComplaints = BatteryComplaint::active()
-            ->whereDate('complaint_date', $today)
-            ->count();
+        // Single aggregate query for all dashboard KPIs (replaces 13 separate COUNT queries)
+        $stats = BatteryComplaint::active()
+            ->toBase()
+            ->selectRaw("
+                COUNT(*) as total_complaints,
+                SUM(CASE WHEN DATE(complaint_date) = ? THEN 1 ELSE 0 END) as todays_complaints,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND battery_connect_image_path IS NOT NULL THEN 1 ELSE 0 END) as todays_battery_checks,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND is_prorata = 1 THEN 1 ELSE 0 END) as todays_prorata_cases,
+                SUM(CASE WHEN battery_connect_image_path IS NOT NULL THEN 1 ELSE 0 END) as total_successful_captures,
+                SUM(CASE WHEN complaint_status = 'Open' THEN 1 ELSE 0 END) as open_complaints,
+                SUM(CASE WHEN complaint_status IN ('Closed', 'Rejected') THEN 1 ELSE 0 END) as closed_complaints,
+                SUM(CASE WHEN complaint_status = 'Open' AND print_count = 0 THEN 1 ELSE 0 END) as pending_print_count,
+                SUM(CASE WHEN battery_type = 'TW' OR excel_sheet = '2W' THEN 1 ELSE 0 END) as tw_count,
+                SUM(CASE WHEN battery_type = 'FW' OR excel_sheet = '4W' THEN 1 ELSE 0 END) as fw_count,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND (battery_type = 'TW' OR excel_sheet = '2W') THEN 1 ELSE 0 END) as todays_tw_count,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND (battery_type = 'FW' OR excel_sheet = '4W') THEN 1 ELSE 0 END) as todays_fw_count,
+                SUM(CASE WHEN complaint_status = 'Open' AND DATE(complaint_date) < ? AND battery_type = 'TW' THEN 1 ELSE 0 END) as backdate_tw_count,
+                SUM(CASE WHEN complaint_status = 'Open' AND DATE(complaint_date) < ? AND battery_type != 'TW' THEN 1 ELSE 0 END) as backdate_fw_count
+            ", [$todayStr, $todayStr, $todayStr, $todayStr, $todayStr, $todayStr, $todayStr])
+            ->first();
 
-        $todaysBatteryChecks = BatteryComplaint::active()
-            ->whereDate('complaint_date', $today)
-            ->whereNotNull('battery_connect_image_path')
-            ->count();
+        $totalComplaints         = (int) ($stats->total_complaints ?? 0);
+        $todaysComplaints        = (int) ($stats->todays_complaints ?? 0);
+        $todaysBatteryChecks     = (int) ($stats->todays_battery_checks ?? 0);
+        $todaysProrataCases      = (int) ($stats->todays_prorata_cases ?? 0);
+        $totalSuccessfulCaptures = (int) ($stats->total_successful_captures ?? 0);
+        $openComplaints          = (int) ($stats->open_complaints ?? 0);
+        $closedComplaints        = (int) ($stats->closed_complaints ?? 0);
+        $pendingPrintCount       = (int) ($stats->pending_print_count ?? 0);
+        $twCount                 = (int) ($stats->tw_count ?? 0);
+        $fwCount                 = (int) ($stats->fw_count ?? 0);
+        $todaysTwCount           = (int) ($stats->todays_tw_count ?? 0);
+        $todaysFwCount           = (int) ($stats->todays_fw_count ?? 0);
+        $backdatePendingTWCount  = (int) ($stats->backdate_tw_count ?? 0);
+        $backdatePendingFWCount  = (int) ($stats->backdate_fw_count ?? 0);
 
-        $todaysProrataCases = BatteryComplaint::active()
-            ->whereDate('complaint_date', $today)
-            ->where('is_prorata', true)
-            ->count();
-
-        $totalSuccessfulCaptures = BatteryComplaint::active()
-            ->whereNotNull('battery_connect_image_path')
-            ->count();
-
-        $openComplaints = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->count();
-
-        $totalComplaints = BatteryComplaint::active()->count();
-
-        $closedComplaints = BatteryComplaint::active()
-            ->whereIn('complaint_status', ['Closed', 'Rejected'])
-            ->count();
-
-        $pendingPrintCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->where('print_count', 0)
-            ->count();
-
-        $twCount = BatteryComplaint::active()
-            ->where(function ($q) {
-                $q->where('battery_type', 'TW')
-                  ->orWhere('excel_sheet', '2W');
-            })
-            ->count();
-
-        $fwCount = BatteryComplaint::active()
-            ->where(function ($q) {
-                $q->where('battery_type', 'FW')
-                  ->orWhere('excel_sheet', '4W');
-            })
-            ->count();
-
-        $todaysTwCount = BatteryComplaint::active()
-            ->whereDate('complaint_date', $today)
-            ->where(function ($q) {
-                $q->where('battery_type', 'TW')
-                  ->orWhere('excel_sheet', '2W');
-            })
-            ->count();
-
-        $todaysFwCount = BatteryComplaint::active()
-            ->whereDate('complaint_date', $today)
-            ->where(function ($q) {
-                $q->where('battery_type', 'FW')
-                  ->orWhere('excel_sheet', '4W');
-            })
-            ->count();
-
-        $backdatePendingTWCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', '<', $today)
-            ->where('battery_type', 'TW')
-            ->count();
-
-        $backdatePendingFWCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', '<', $today)
-            ->where('battery_type', '!=', 'TW')
-            ->count();
-
-        // All months that have open (return entry pending) TW or FW complaints
+        // Low-RAM query (no Eloquent model hydration, only 3 lightweight columns)
         $openComplaintsForChart = BatteryComplaint::active()
+            ->toBase()
             ->where('complaint_status', 'Open')
             ->whereNotNull('complaint_date')
             ->orderBy('complaint_date', 'asc')
@@ -104,10 +65,11 @@ class DashboardController extends Controller
 
         $monthlyMap = [];
         foreach ($openComplaintsForChart as $item) {
-            $ym = $item->complaint_date->format('Y-m');
+            $parsedDate = Carbon::parse($item->complaint_date);
+            $ym = $parsedDate->format('Y-m');
             if (!isset($monthlyMap[$ym])) {
                 $monthlyMap[$ym] = [
-                    'label' => $item->complaint_date->format('M Y'),
+                    'label' => $parsedDate->format('M Y'),
                     'tw' => 0,
                     'fw' => 0,
                     'total' => 0,

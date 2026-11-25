@@ -624,7 +624,7 @@ class BatteryComplaintController extends Controller
     public function pendingCases(Request $request)
     {
         $todayDate = date('Y-m-d');
-        $query = BatteryComplaint::active()->with(['creator', 'closedBy']);
+        $query = BatteryComplaint::active();
 
         // Default to OPEN complaints only
         $selectedStatus = $request->input('status', 'Open');
@@ -681,42 +681,26 @@ class BatteryComplaintController extends Controller
 
         $complaints = $query->orderBy('complaint_date', 'desc')->orderBy('id', 'desc')->paginate(30)->withQueryString();
 
-        // Calculate count of today's open unprinted 2W and 4W entries
-        $unprintedToday2WCount = BatteryComplaint::active()
+        // Single aggregate query for all pending page counts (replaces 5 separate COUNT queries)
+        $counts = BatteryComplaint::active()
+            ->toBase()
             ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', $todayDate)
-            ->where('battery_type', 'TW')
-            ->where('print_count', 0)
-            ->count();
+            ->selectRaw("
+                COUNT(*) as total_open,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND battery_type = 'TW' AND print_count = 0 THEN 1 ELSE 0 END) as unprinted_2w,
+                SUM(CASE WHEN DATE(complaint_date) = ? AND battery_type != 'TW' AND print_count = 0 THEN 1 ELSE 0 END) as unprinted_4w,
+                SUM(CASE WHEN DATE(complaint_date) < ? AND battery_type = 'TW' THEN 1 ELSE 0 END) as backdate_tw,
+                SUM(CASE WHEN DATE(complaint_date) < ? AND battery_type != 'TW' THEN 1 ELSE 0 END) as backdate_fw
+            ", [$todayDate, $todayDate, $todayDate, $todayDate])
+            ->first();
 
-        $unprintedToday4WCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', $todayDate)
-            ->where('battery_type', '!=', 'TW')
-            ->where('print_count', 0)
-            ->count();
-
-        $unprintedTodayCount = $unprintedToday2WCount + $unprintedToday4WCount;
-
-        // Count of open cases from back-dates (older than today), separated by TW and FW
-        $backdatePendingTWCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', '<', $todayDate)
-            ->where('battery_type', 'TW')
-            ->count();
-
-        $backdatePendingFWCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->whereDate('complaint_date', '<', $todayDate)
-            ->where('battery_type', '!=', 'TW')
-            ->count();
-
-        $backdatePendingCount = $backdatePendingTWCount + $backdatePendingFWCount;
-
-        // Total Open Pending count
-        $totalOpenPendingCount = BatteryComplaint::active()
-            ->where('complaint_status', 'Open')
-            ->count();
+        $totalOpenPendingCount  = (int) ($counts->total_open ?? 0);
+        $unprintedToday2WCount  = (int) ($counts->unprinted_2w ?? 0);
+        $unprintedToday4WCount  = (int) ($counts->unprinted_4w ?? 0);
+        $unprintedTodayCount    = $unprintedToday2WCount + $unprintedToday4WCount;
+        $backdatePendingTWCount = (int) ($counts->backdate_tw ?? 0);
+        $backdatePendingFWCount = (int) ($counts->backdate_fw ?? 0);
+        $backdatePendingCount   = $backdatePendingTWCount + $backdatePendingFWCount;
 
         return view('complaints.pending_cases', compact('complaints', 'unprintedTodayCount', 'unprintedToday2WCount', 'unprintedToday4WCount', 'totalOpenPendingCount', 'backdatePendingCount', 'backdatePendingTWCount', 'backdatePendingFWCount', 'todayDate', 'selectedDate', 'selectedStatus'));
     }

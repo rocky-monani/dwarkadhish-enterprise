@@ -24,7 +24,7 @@ class BatteryConnectService
     public function checkHealth(): array
     {
         try {
-            $response = Http::timeout(3)
+            $response = Http::connectTimeout(1)->timeout(1)
                 ->withHeaders(['X-Automation-Secret' => $this->secretKey])
                 ->get("{$this->baseUrl}/health");
 
