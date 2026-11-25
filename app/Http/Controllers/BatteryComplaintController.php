@@ -144,7 +144,10 @@ class BatteryComplaintController extends Controller
             });
         }
 
-        $allComplaints = $query->orderBy('id', 'asc')->get();
+        $allComplaints = $query->toBase()
+            ->select(['id', 'complaint_number', 'battery_serial_number', 'customer_name', 'battery_type', 'battery_connect_image_path'])
+            ->orderBy('id', 'asc')
+            ->get();
 
         $matched = $allComplaints->filter(function ($c) use ($fromInput, $toInput, $fromNum, $toNum) {
             $cNo = trim($c->complaint_number);

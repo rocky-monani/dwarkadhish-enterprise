@@ -27,7 +27,9 @@ class ExcelImportService
      */
     public function previewImport(string $filePath): array
     {
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
 
         $preview = [
             'total_rows' => 0,
@@ -59,6 +61,9 @@ class ExcelImportService
                                 + ($preview['sheets']['4W']['new'] + $preview['sheets']['4W']['existing'] + $preview['sheets']['4W']['unchanged']);
         $preview['error_count'] = count($preview['errors']);
 
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
+
         return $preview;
     }
 
@@ -67,7 +72,9 @@ class ExcelImportService
      */
     public function executeImport(string $filePath, ?int $userId = null): array
     {
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
 
         $summary = [
             'total_processed' => 0,

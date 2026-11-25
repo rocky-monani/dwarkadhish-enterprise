@@ -35,38 +35,37 @@ class InwardExcelExportService
             }
         }
 
-        // 2. Fetch database records using lightweight base query (no Eloquent hydration or JSON blobs)
-        $query = BatteryComplaint::active()->toBase();
+        // 2. Build base query (no Eloquent hydration or JSON blobs)
+        $baseQuery = BatteryComplaint::active()->toBase();
 
         if ($fromDate) {
-            $query->whereDate('complaint_date', '>=', $fromDate);
+            $baseQuery->whereDate('complaint_date', '>=', $fromDate);
         }
 
         if ($toDate) {
-            $query->whereDate('complaint_date', '<=', $toDate);
+            $baseQuery->whereDate('complaint_date', '<=', $toDate);
         }
 
         $vehicleTypeUpper = strtoupper(trim($vehicleType ?? 'ALL'));
 
         if ($vehicleTypeUpper === '2W') {
-            $query->where('battery_type', 'TW');
+            $baseQuery->where('battery_type', 'TW');
         } elseif ($vehicleTypeUpper === '4W') {
-            $query->where('battery_type', '!=', 'TW');
+            $baseQuery->where('battery_type', '!=', 'TW');
         }
 
-        $records = $query->select([
-                'id', 'battery_type', 'complaint_number', 'complaint_date', 'case_number',
-                'purchase_date', 'product_model', 'product_segment', 'battery_serial_number',
-                'is_digital_warranty', 'online_reg_type', 'vehicle_number', 'vehicle_name',
-                'final_decision', 'is_prorata', 'prorata_percentage', 'is_service_battery_given',
-                'service_battery_number', 'customer_mobile', 'customer_name', 'location',
-                'closing_date', 'new_battery_number', 'return_date', 'delivery_mode',
-            ])
-            ->orderBy('complaint_date', 'asc')
-            ->orderBy('id', 'asc')
-            ->get();
+        // Single lightweight aggregate to check counts without loading rows into RAM
+        $counts = (clone $baseQuery)->selectRaw("
+            COUNT(*) as total_count,
+            SUM(CASE WHEN UPPER(COALESCE(battery_type, 'TW')) = 'TW' THEN 1 ELSE 0 END) as tw_count,
+            SUM(CASE WHEN UPPER(COALESCE(battery_type, 'TW')) != 'TW' THEN 1 ELSE 0 END) as fw_count
+        ")->first();
 
-        if ($records->isEmpty()) {
+        $totalCount = (int) ($counts->total_count ?? 0);
+        $twCount    = (int) ($counts->tw_count ?? 0);
+        $fwCount    = (int) ($counts->fw_count ?? 0);
+
+        if ($totalCount === 0) {
             return [
                 'success' => false,
                 'count' => 0,
@@ -74,9 +73,22 @@ class InwardExcelExportService
             ];
         }
 
-        // Separate 2W and 4W records
-        $twRecords = $records->filter(fn ($r) => strtoupper($r->battery_type ?? 'TW') === 'TW');
-        $fwRecords = $records->filter(fn ($r) => strtoupper($r->battery_type ?? 'TW') !== 'TW');
+        $selectCols = [
+            'id', 'battery_type', 'complaint_number', 'complaint_date', 'case_number',
+            'purchase_date', 'product_model', 'product_segment', 'battery_serial_number',
+            'is_digital_warranty', 'online_reg_type', 'vehicle_number', 'vehicle_name',
+            'final_decision', 'is_prorata', 'prorata_percentage', 'is_service_battery_given',
+            'service_battery_number', 'customer_mobile', 'customer_name', 'location',
+            'closing_date', 'new_battery_number', 'return_date', 'delivery_mode',
+        ];
+
+        $twCursor = in_array($vehicleTypeUpper, ['ALL', '2W']) && $twCount > 0
+            ? (clone $baseQuery)->where('battery_type', 'TW')->select($selectCols)->orderBy('complaint_date', 'asc')->orderBy('id', 'asc')->cursor()
+            : [];
+
+        $fwCursor = in_array($vehicleTypeUpper, ['ALL', '4W']) && $fwCount > 0
+            ? (clone $baseQuery)->where('battery_type', '!=', 'TW')->select($selectCols)->orderBy('complaint_date', 'asc')->orderBy('id', 'asc')->cursor()
+            : [];
 
         $writtenCounts = [
             '2W' => 0,
@@ -107,7 +119,7 @@ class InwardExcelExportService
         // Fast-path: direct ZipArchive + disk-streamed inlineStr XML (flat RAM even at 100k+ rows)
         $streamed = false;
         if (class_exists(\ZipArchive::class) && copy($templatePath, $tempPath)) {
-            $writtenCounts = $this->streamIntoXlsxZip($tempPath, $vehicleTypeUpper, $twRecords, $fwRecords, 8);
+            $writtenCounts = $this->streamIntoXlsxZip($tempPath, $vehicleTypeUpper, $twCursor, $fwCursor, 8, $twCount, $fwCount);
             if ($writtenCounts !== null) {
                 $streamed = true;
             }
@@ -115,6 +127,9 @@ class InwardExcelExportService
 
         // Safe fallback to PhpSpreadsheet if ZipArchive streaming wasn't applicable
         if (! $streamed) {
+            $records = (clone $baseQuery)->select($selectCols)->orderBy('complaint_date', 'asc')->orderBy('id', 'asc')->get();
+            $twRecords = $records->filter(fn ($r) => strtoupper($r->battery_type ?? 'TW') === 'TW');
+            $fwRecords = $records->filter(fn ($r) => strtoupper($r->battery_type ?? 'TW') !== 'TW');
             $spreadsheet = IOFactory::load($templatePath);
             $writtenCounts = [
                 '2W' => in_array($vehicleTypeUpper, ['ALL', '2W']) ? $this->populateSheet($spreadsheet, '2W', 8, $twRecords) : 0,
@@ -130,7 +145,7 @@ class InwardExcelExportService
         }
 
         Log::info('Excel export generated successfully', [
-            'total_records' => $records->count(),
+            'total_records' => $totalCount,
             'written_2w' => $writtenCounts['2W'],
             'written_4w' => $writtenCounts['4W'],
             'filename' => $filename,
@@ -139,7 +154,7 @@ class InwardExcelExportService
 
         return [
             'success' => true,
-            'count' => $records->count(),
+            'count' => $totalCount,
             'written_2w' => $writtenCounts['2W'],
             'written_4w' => $writtenCounts['4W'],
             'file_path' => $tempPath,
@@ -151,7 +166,7 @@ class InwardExcelExportService
      * Stream rows directly into an existing .xlsx ZIP archive using inlineStr XML.
      * Avoids PhpSpreadsheet Cell object hydration for 10k+ row lightning speed.
      */
-    protected function streamIntoXlsxZip(string $xlsxPath, string $vehicleTypeUpper, $twRecords, $fwRecords, int $startRow): ?array
+    protected function streamIntoXlsxZip(string $xlsxPath, string $vehicleTypeUpper, iterable $twRecords, iterable $fwRecords, int $startRow, int $twExpectedCount = 0, int $fwExpectedCount = 0): ?array
     {
         $zip = new \ZipArchive();
         if ($zip->open($xlsxPath) !== true) {
@@ -176,13 +191,15 @@ class InwardExcelExportService
 
         try {
             if (isset($sheetMap['2W'])) {
-                $targetRecords = in_array($vehicleTypeUpper, ['ALL', '2W']) ? $twRecords : collect();
-                $written['2W'] = $this->rewriteSheetXmlInZip($zip, $sheetMap['2W'], $startRow, $targetRecords, $tempXmlFiles);
+                $targetRecords = in_array($vehicleTypeUpper, ['ALL', '2W']) ? $twRecords : [];
+                $expected = in_array($vehicleTypeUpper, ['ALL', '2W']) ? $twExpectedCount : 0;
+                $written['2W'] = $this->rewriteSheetXmlInZip($zip, $sheetMap['2W'], $startRow, $targetRecords, $tempXmlFiles, $expected);
             }
 
             if (isset($sheetMap['4W'])) {
-                $targetRecords = in_array($vehicleTypeUpper, ['ALL', '4W']) ? $fwRecords : collect();
-                $written['4W'] = $this->rewriteSheetXmlInZip($zip, $sheetMap['4W'], $startRow, $targetRecords, $tempXmlFiles);
+                $targetRecords = in_array($vehicleTypeUpper, ['ALL', '4W']) ? $fwRecords : [];
+                $expected = in_array($vehicleTypeUpper, ['ALL', '4W']) ? $fwExpectedCount : 0;
+                $written['4W'] = $this->rewriteSheetXmlInZip($zip, $sheetMap['4W'], $startRow, $targetRecords, $tempXmlFiles, $expected);
             }
 
             $zip->close();
@@ -239,7 +256,7 @@ class InwardExcelExportService
     /**
      * Rewrite a worksheet XML inside the zip via a temp file on disk (flat RAM even at 100k+ rows).
      */
-    protected function rewriteSheetXmlInZip(\ZipArchive $zip, string $sheetPath, int $startRow, $records, array &$tempXmlFiles): int
+    protected function rewriteSheetXmlInZip(\ZipArchive $zip, string $sheetPath, int $startRow, iterable $records, array &$tempXmlFiles, int $expectedCount = 0): int
     {
         $xml = $zip->getFromName($sheetPath);
         if ($xml === false) {
@@ -297,7 +314,7 @@ class InwardExcelExportService
         $fh = fopen($xmlTempPath, 'wb');
 
         // Pre-calculate last row so dimension tag is accurate without buffering the whole sheet
-        $recordCount = is_countable($records) ? count($records) : 0;
+        $recordCount = $expectedCount > 0 ? $expectedCount : (is_countable($records) ? count($records) : 0);
         $lastRow = max($startRow - 1, $startRow + $recordCount - 1);
         $beforeSheetData = preg_replace(
             '/<dimension\s+ref="[A-Z]+\d+:[A-Z]+\d+"\s*\/>/',
